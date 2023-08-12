@@ -1,0 +1,37 @@
+{
+  "name": "@allostasis/js-sdk",
+  "version": "1.0.0",
+  "description": "Allostasis data management",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rezashams1/allostasis.git"
+  },
+  "keywords": [
+    "Allostasis",
+    "DAO",
+    "JS-SDK"
+  ],
+  "author": "Reza Shams",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rezashams1/allostasis/issues"
+  },
+  "homepage": "https://github.com/rezashams1/allostasis#readme",
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@ceramicnetwork/http-client": "^2.27.0",
+    "@composedb/client": "^0.4.4",
+    "@composedb/types": "^0.4.4",
+    "@didtools/pkh-ethereum": "^0.4.0",
+    "@ethersproject/providers": "^5.7.2",
+    "@lit-protocol/lit-node-client": "^2.2.47",
+    "did-session": "^2.0.1",
+    "lodash": "^4.17.21"
+  }
+}
