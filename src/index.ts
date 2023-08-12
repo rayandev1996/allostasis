@@ -1,10 +1,15 @@
 import {
-  AllostasisConstructor, AvatiaProfile, CenteriaProfile,
+  AllostasisConstructor,
+  AvatiaProfile,
+  CenteriaProfile,
   Chain,
-  Communities, EmbodiaProfile,
-  GreeniaProfile, IncarniaProfile,
-  Profile, WeariaProfile
+  Communities,
+  EmbodiaProfile,
+  IncarniaProfile,
+  Profile,
+  WeariaProfile
 } from './types/allostasis';
+import { GreeniaProfile } from './types/greenia';
 import { CeramicClient } from '@ceramicnetwork/http-client';
 import { ComposeClient } from '@composedb/client';
 import * as LitJsSdk from '@lit-protocol/lit-node-client';
@@ -12,7 +17,7 @@ import { LitNodeClient } from '@lit-protocol/lit-node-client';
 import { definition } from './constants/definition';
 import { RuntimeCompositeDefinition } from '@composedb/types';
 import { Store } from './utils/store';
-import { getAuthMethod } from './utils/did-provider';
+import { getAddressFromDid, getAuthMethod } from './utils/did-provider';
 import { DIDSession } from 'did-session';
 import { Web3Provider } from '@ethersproject/providers';
 import { ethConnect } from '@lit-protocol/auth-browser';
@@ -149,9 +154,48 @@ export class Allostasis {
     });
   }
 
-  async createOrUpdateProfile<T extends GreeniaProfile | EmbodiaProfile | AvatiaProfile | CenteriaProfile | IncarniaProfile | WeariaProfile>(
-    params: T
-  ): Promise<T> {
+  async isConnected(): Promise<{ did: any; address: string }> {
+    return new Promise((resolve, reject) => {
+      (async () => {
+        await this.ceramic;
+        const store = new Store();
+        await this.lit.connect();
+
+        const sessionString = await store.getItem('ceramic-session');
+
+        /** Connect to Ceramic using the session previously stored */
+        try {
+          const session = await DIDSession.fromSession(sessionString ?? '');
+
+          const { address } = getAddressFromDid(session.id);
+
+          const _userAuthSig = await store.getItem(
+            'lit-auth-signature-' + address
+          );
+          if (_userAuthSig) {
+            await store.setItem('lit-auth-signature', _userAuthSig);
+          }
+
+          this.ceramic.did = session.did;
+          this.composeClient.setDID(session.did);
+
+          resolve({ did: session.did, address: address ?? '' });
+        } catch (e) {
+          reject(e);
+        }
+      })();
+    });
+  }
+
+  async createOrUpdateProfile<
+    T extends
+      | GreeniaProfile
+      | EmbodiaProfile
+      | AvatiaProfile
+      | CenteriaProfile
+      | IncarniaProfile
+      | WeariaProfile
+  >(params: T): Promise<T> {
     return new Promise((resolve, reject) => {
       (async () => {
         try {
@@ -161,9 +205,13 @@ export class Allostasis {
             mutation {
               createProfile(input: {
                 content: {
-                  ${Object.keys(params).filter(x => x === 'name' || x === 'email' || x === 'avatar').map(key => {
-                    return `${key}: "${params[key]}"`
-                  })}
+                  ${Object.keys(params)
+                    .filter(
+                      (x) => x === 'name' || x === 'email' || x === 'avatar'
+                    )
+                    .map((key) => {
+                      return `${key}: "${params[key]}"`;
+                    })}
                 }
               })
               {
@@ -188,13 +236,20 @@ export class Allostasis {
                   mutation {
                     createGreeniaProfile(input: {
                       content:{
-                        ${Object.keys(params).filter(x => x === 'cover' || x === 'bio' || x === 'skills').map(key => {
-                          if (key === 'skills') {
-                            return `${key}: [${params[key].map(i => `"${i}"`).join(',')}]`
-                          } else {
-                            return `${key}: "${params[key]}"`
-                          }
-                        })}
+                        ${Object.keys(params)
+                          .filter(
+                            (x) =>
+                              x === 'cover' || x === 'bio' || x === 'skills'
+                          )
+                          .map((key) => {
+                            if (key === 'skills') {
+                              return `${key}: [${params[key]
+                                .map((i) => `"${i}"`)
+                                .join(',')}]`;
+                            } else {
+                              return `${key}: "${params[key]}"`;
+                            }
+                          })}
                         profileID: "${create.data.createProfile.document.id}"
                       }
                     })
@@ -209,7 +264,10 @@ export class Allostasis {
                   }
                 `);
 
-                if (createGreenia.errors != null && createGreenia.errors.length > 0) {
+                if (
+                  createGreenia.errors != null &&
+                  createGreenia.errors.length > 0
+                ) {
                   reject(createGreenia);
                 } else {
                   const update = await this.composeClient.executeQuery<{
@@ -241,6 +299,152 @@ export class Allostasis {
                 break;
               default:
                 reject('Wrong community');
+            }
+          }
+        } catch (e) {
+          reject(e);
+        }
+      })();
+    });
+  }
+
+  async getProfile(): Promise<Profile | GreeniaProfile> {
+    return new Promise((resolve, reject) => {
+      (async () => {
+        try {
+          const profile = await this.composeClient.executeQuery<{
+            viewer: { profile: Profile };
+          }>(`
+          query {
+            viewer {
+              profile {
+                id
+                name
+                email
+                avatar
+                articles(last:300) {
+                  edges {
+                    node {
+                      id
+                      body
+                      isDeleted
+                      isEncrypted
+                      price
+                      shortDescription
+                      tags
+                      thumbnail
+                      title
+                      encryptedSymmetricKey
+                      unifiedAccessControlConditions
+                      commentsCount
+                      likesCount
+                    }
+                  }
+                }
+              }
+            }
+          }
+         `);
+
+          if (profile.errors != null && profile.errors.length > 0) {
+            reject(profile);
+          } else {
+            if (profile.data?.viewer?.profile != null) {
+              const profileData = {
+                ...profile.data?.viewer?.profile,
+                educations: _.get(
+                  profile.data.viewer.profile,
+                  'educations.edges',
+                  []
+                ).map((i: { node: any }) => i.node),
+                experiences: _.get(
+                  profile.data.viewer.profile,
+                  'experiences.edges',
+                  []
+                ).map((i: { node: any }) => i.node),
+                articles: _.get(
+                  profile.data.viewer.profile,
+                  'articles.edges',
+                  []
+                ).map((i: { node: any }) => i.node)
+              };
+
+              switch (this.community) {
+                case 'greenia':
+                  const greeniaProfile = await this.composeClient.executeQuery<{
+                    viewer: { profile: GreeniaProfile };
+                  }>(`
+                  query {
+                    viewer {
+                      profile {
+                        id
+                        bio
+                        cover
+                        skills
+                        experiences(last:300) {
+                          edges{
+                            node{
+                              id
+                              city
+                              title
+                              company
+                              endDate
+                              startDate
+                              description
+                              isDeleted
+                            }
+                          }
+                        }
+                        educations(last:300) {
+                          edges{
+                            node{
+                              id
+                              city
+                              title
+                              school
+                              endDate
+                              startDate
+                              description
+                              isDeleted
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                 `);
+
+                  if (
+                    greeniaProfile.errors != null &&
+                    greeniaProfile.errors.length > 0
+                  ) {
+                    reject(greeniaProfile);
+                  } else {
+                    if (greeniaProfile.data?.viewer?.profile != null) {
+                      resolve({
+                        ...profileData,
+                        ...greeniaProfile.data?.viewer?.profile,
+                        educations: _.get(
+                          profile.data.viewer.profile,
+                          'educations.edges',
+                          []
+                        ).map((i: { node: any }) => i.node),
+                        experiences: _.get(
+                          profile.data.viewer.profile,
+                          'experiences.edges',
+                          []
+                        ).map((i: { node: any }) => i.node)
+                      });
+                    } else {
+                      reject(greeniaProfile);
+                    }
+                  }
+                  break;
+                default:
+                  reject('Wrong community');
+              }
+            } else {
+              reject(profile);
             }
           }
         } catch (e) {

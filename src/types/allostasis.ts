@@ -25,12 +25,6 @@ export interface Profile {
   avatar?: string;
 }
 
-export interface GreeniaProfile extends Profile {
-  cover?: string;
-  bio?: string;
-  skills?: string[];
-}
-
 export interface EmbodiaProfile extends Profile {}
 export interface AvatiaProfile extends Profile {}
 export interface IncarniaProfile extends Profile {}
