@@ -122,8 +122,8 @@ export default class Allostasis {
               }
             }
 
-            this.ceramic.did = session.did;
-            this.composeClient.setDID(session.did);
+            await this.ceramic.setDID(session.did);
+            await this.composeClient.setDID(session.did);
 
             resolve({ did: session.did, address: address ?? '' });
           } else {
