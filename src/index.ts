@@ -1,13 +1,11 @@
 import {
   AllostasisConstructor,
-  AvatiaProfile,
-  CenteriaProfile,
   Chain,
+  Chat,
+  ChatMessage,
   Communities,
-  EmbodiaProfile,
-  IncarniaProfile,
   Profile,
-  WeariaProfile
+  ProfileTypeBasedOnCommunities
 } from './types/allostasis';
 import { GreeniaProfile } from './types/greenia';
 import { CeramicClient } from '@ceramicnetwork/http-client';
@@ -22,9 +20,11 @@ import { DIDSession } from 'did-session';
 import { Web3Provider } from '@ethersproject/providers';
 import { ethConnect } from '@lit-protocol/auth-browser';
 import _ from 'lodash';
+import dayjs from 'dayjs';
+import { chatMessageAccessControlGenerator, encryptString } from './utils/lit';
 
-export class Allostasis {
-  private community: Communities;
+export class Allostasis<CT extends Communities> {
+  private community: keyof Communities;
   private nodeURL: string;
   private provider: any;
   private chain: Chain;
@@ -32,9 +32,9 @@ export class Allostasis {
   private composeClient: ComposeClient;
   private lit: LitNodeClient;
 
-  constructor(options: AllostasisConstructor) {
+  constructor(community: keyof Communities, options: AllostasisConstructor) {
     this.nodeURL = options.nodeURL;
-    this.community = options.community;
+    this.community = community;
 
     if (options.chain) {
       this.chain = options.chain;
@@ -187,15 +187,9 @@ export class Allostasis {
     });
   }
 
-  async createOrUpdateProfile<
-    T extends
-      | GreeniaProfile
-      | EmbodiaProfile
-      | AvatiaProfile
-      | CenteriaProfile
-      | IncarniaProfile
-      | WeariaProfile
-  >(params: T): Promise<T> {
+  async createOrUpdateProfile<T extends typeof this.community>(
+    params: ProfileTypeBasedOnCommunities<T>
+  ): Promise<ProfileTypeBasedOnCommunities<T>> {
     return new Promise((resolve, reject) => {
       (async () => {
         try {
@@ -211,7 +205,8 @@ export class Allostasis {
                     )
                     .map((key) => {
                       return `${key}: "${params[key]}"`;
-                    })}
+                    })
+                    .join(',')}
                 }
               })
               {
@@ -236,6 +231,7 @@ export class Allostasis {
                   mutation {
                     createGreeniaProfile(input: {
                       content:{
+                        profileID: "${create.data.createProfile.document.id}",
                         ${Object.keys(params)
                           .filter(
                             (x) =>
@@ -249,8 +245,8 @@ export class Allostasis {
                             } else {
                               return `${key}: "${params[key]}"`;
                             }
-                          })}
-                        profileID: "${create.data.createProfile.document.id}"
+                          })
+                          .join(',')}
                       }
                     })
                     {
@@ -273,22 +269,22 @@ export class Allostasis {
                   const update = await this.composeClient.executeQuery<{
                     createProfile: { document: Profile };
                   }>(`
-                  mutation {
-                    createProfile(input: {
-                      content:{
-                        greeniaProfileID: "${createGreenia.data.createGreeniaProfile.document.id}"
-                      }
-                    })
-                    {
-                      document {
-                        id
-                        name
-                        email
-                        avatar
+                    mutation {
+                      createProfile(input: {
+                        content:{
+                          greeniaProfileID: "${createGreenia.data.createGreeniaProfile.document.id}"
+                        }
+                      })
+                      {
+                        document {
+                          id
+                          name
+                          email
+                          avatar
+                        }
                       }
                     }
-                  }
-                `);
+                  `);
 
                   if (update.errors != null && update.errors.length > 0) {
                     reject(update);
@@ -315,36 +311,36 @@ export class Allostasis {
           const profile = await this.composeClient.executeQuery<{
             viewer: { profile: Profile };
           }>(`
-          query {
-            viewer {
-              profile {
-                id
-                name
-                email
-                avatar
-                articles(last:300) {
-                  edges {
-                    node {
-                      id
-                      body
-                      isDeleted
-                      isEncrypted
-                      price
-                      shortDescription
-                      tags
-                      thumbnail
-                      title
-                      encryptedSymmetricKey
-                      unifiedAccessControlConditions
-                      commentsCount
-                      likesCount
+            query {
+              viewer {
+                profile {
+                  id
+                  name
+                  email
+                  avatar
+                  articles(last: 300) {
+                    edges {
+                      node {
+                        id
+                        body
+                        isDeleted
+                        isEncrypted
+                        price
+                        shortDescription
+                        tags
+                        thumbnail
+                        title
+                        encryptedSymmetricKey
+                        unifiedAccessControlConditions
+                        commentsCount
+                        likesCount
+                      }
                     }
                   }
                 }
               }
             }
-          }
-         `);
+          `);
 
           if (profile.errors != null && profile.errors.length > 0) {
             reject(profile);
@@ -374,45 +370,45 @@ export class Allostasis {
                   const greeniaProfile = await this.composeClient.executeQuery<{
                     viewer: { profile: GreeniaProfile };
                   }>(`
-                  query {
-                    viewer {
-                      profile {
-                        id
-                        bio
-                        cover
-                        skills
-                        experiences(last:300) {
-                          edges{
-                            node{
-                              id
-                              city
-                              title
-                              company
-                              endDate
-                              startDate
-                              description
-                              isDeleted
+                    query {
+                      viewer {
+                        profile {
+                          id
+                          bio
+                          cover
+                          skills
+                          experiences(last: 300) {
+                            edges {
+                              node {
+                                id
+                                city
+                                title
+                                company
+                                endDate
+                                startDate
+                                description
+                                isDeleted
+                              }
                             }
                           }
-                        }
-                        educations(last:300) {
-                          edges{
-                            node{
-                              id
-                              city
-                              title
-                              school
-                              endDate
-                              startDate
-                              description
-                              isDeleted
+                          educations(last: 300) {
+                            edges {
+                              node {
+                                id
+                                city
+                                title
+                                school
+                                endDate
+                                startDate
+                                description
+                                isDeleted
+                              }
                             }
                           }
                         }
                       }
                     }
-                  }
-                 `);
+                  `);
 
                   if (
                     greeniaProfile.errors != null &&
@@ -446,6 +442,347 @@ export class Allostasis {
             } else {
               reject(profile);
             }
+          }
+        } catch (e) {
+          reject(e);
+        }
+      })();
+    });
+  }
+
+  async getUserProfile(
+    id: string
+  ): Promise<ProfileTypeBasedOnCommunities<typeof this.community>> {
+    return new Promise((resolve, reject) => {
+      (async () => {
+        const profile = await this.composeClient.executeQuery<{
+          node: Profile & {
+            chats: { edges: { node: Chat }[] };
+            receivedChats: { edges: { node: Chat }[] };
+          };
+        }>(`
+          query {
+            node(id: "${id}") {
+              ... on Profile {
+                id
+                name
+                email
+                avatar
+                greeniaProfileID
+                embodiaProfileID
+                avatiaProfileID
+                centeriaProfileID
+                incarniaProfileID
+                weariaProfileID
+                chats {
+                  edges {
+                    node {
+                      id
+                      createdAt
+                      isDeleted
+                      profileID
+                      profile {
+                        id
+                        name
+                        avatar
+                      }
+                      recipientProfileID
+                      recipientProfile {
+                        id
+                        name
+                        avatar
+                      }
+                    }
+                  }
+                }
+                receivedChats {
+                  edges {
+                    node {
+                      id
+                      createdAt
+                      isDeleted
+                      profileID
+                      profile {
+                        id
+                        name
+                        avatar
+                      }
+                      recipientProfileID
+                      recipientProfile {
+                        id
+                        name
+                        avatar
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `);
+
+        if (profile.errors != null && profile.errors.length > 0) {
+          reject(profile);
+        } else {
+          switch (this.community) {
+            case 'greenia':
+              if (
+                profile.data.node.greeniaProfileID != null &&
+                profile.data.node.greeniaProfileID !== ''
+              ) {
+                const greeniaProfile = await this.composeClient.executeQuery<{
+                  node: GreeniaProfile;
+                }>(`
+                  query {
+                    node(id: "${profile.data.node.greeniaProfileID}") {
+                      ... on GreeniaProfile {
+                        cover
+                        bio
+                        skills
+                        experiences(last:300) {
+                          edges {
+                            node {
+                              id
+                              city
+                              title
+                              company
+                              endDate
+                              startDate
+                              description
+                              isDeleted
+                            }
+                          }
+                        }
+                        educations(last:300) {
+                          edges {
+                            node {
+                              id
+                              city
+                              title
+                              school
+                              endDate
+                              startDate
+                              description
+                              isDeleted
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                `);
+
+                if (
+                  greeniaProfile.errors != null &&
+                  greeniaProfile.errors.length > 0
+                ) {
+                  reject(greeniaProfile);
+                } else {
+                  resolve({
+                    ...profile.data.node,
+                    chats: profile.data.node.chats.edges.map(
+                      (chat) => chat.node
+                    ),
+                    receivedChats: profile.data.node.receivedChats.edges.map(
+                      (chat) => chat.node
+                    ),
+                    ...greeniaProfile.data.node
+                  });
+                }
+              } else {
+                reject(profile);
+              }
+              break;
+            default:
+              reject('Wrong Community');
+          }
+        }
+      })();
+    });
+  }
+
+  async createChat(recipient: string): Promise<Chat> {
+    return new Promise((resolve, reject) => {
+      (async () => {
+        try {
+          const user = await this.getUserProfile(recipient);
+          const iHaveCreatedBefore = user.chats.find(
+            (x) => x.recipientProfileID === recipient
+          );
+          const theyHaveCreatedBefore = user.receivedChats.find(
+            (x) => x.profileID === recipient
+          );
+
+          if (iHaveCreatedBefore != null) {
+            resolve(iHaveCreatedBefore);
+          } else if (theyHaveCreatedBefore != null) {
+            resolve(theyHaveCreatedBefore);
+          } else {
+            const chat = await this.composeClient.executeQuery<{
+              createChat: { document: Chat };
+            }>(`
+              mutation {
+                createChat(input: {
+                  content:{
+                    profileID: "${user.id}",
+                    recipientProfileID: "${recipient}",
+                    createdAt: "${dayjs().toISOString()}",
+                    isDeleted: false
+                  }
+                })
+                {
+                  document {
+                    id
+                    profileID
+                    profile {
+                      id
+                      name
+                      avatar
+                    }
+                    recipientProfileID
+                    recipientProfile {
+                      id
+                      name
+                      avatar
+                    }
+                    createdAt
+                    isDeleted
+                  }
+                }
+              }
+            `);
+
+            if (chat.errors != null && chat.errors.length > 0) {
+              reject(chat);
+            } else {
+              resolve(chat.data.createChat.document);
+            }
+          }
+        } catch (e) {
+          reject(e);
+        }
+      })();
+    });
+  }
+
+  async getChat(id: string): Promise<Chat> {
+    return new Promise((resolve, reject) => {
+      (async () => {
+        try {
+          const chat = await this.composeClient.executeQuery<{
+            node: Chat & { messages: { edges: { node: ChatMessage }[] } };
+          }>(`
+            query {
+              node(id: "${id}") {
+                ... on Chat {
+                  id
+                  profileID
+                  profile {
+                    id
+                    name
+                    avatar
+                  }
+                  recipientProfileID
+                  recipientProfile {
+                    id
+                    name
+                    avatar
+                  }
+                  messagesCount
+                  messages {
+                    edges {
+                      node {
+                        id
+                        profileID
+                        profile {
+                          id
+                          name
+                          avatar
+                        }
+                        body
+                        unifiedAccessControlConditions
+                        encryptedSymmetricKey
+                      }
+                    }
+                  }
+                  createdAt
+                  isDeleted
+                }
+              }
+            }
+          `);
+
+          if (chat.errors != null && chat.errors.length > 0) {
+            reject(chat);
+          } else {
+            resolve({
+              ...chat.data.node,
+              messages: chat.data.node.messages.edges.map((node) => node.node)
+            });
+          }
+        } catch (e) {
+          reject(e);
+        }
+      })();
+    });
+  }
+
+  async sendMessage(
+    content: string,
+    chatId: string,
+    profileId: string,
+    userAddress: string,
+    recipientAddress: string
+  ): Promise<ChatMessage> {
+    return new Promise((resolve, reject) => {
+      (async () => {
+        try {
+          const encryption = await encryptString(
+            content,
+            chatMessageAccessControlGenerator(userAddress, recipientAddress),
+            this.chain,
+            this.lit
+          );
+
+          if (encryption) {
+            const message = await this.composeClient.executeQuery<{
+              createChatMessage: { document: ChatMessage };
+            }>(`
+              mutation {
+                createChatMessage(input: {
+                  content:{
+                    chatID: "${chatId}",
+                    profileID: "${profileId}",
+                    createdAt: "${dayjs().toISOString()}",
+                    body: "${encryption.encryptedContent}",
+                    unifiedAccessControlConditions: "${encryption.unifiedAccessControlConditions}",
+                    encryptedSymmetricKey: "${encryption.encryptedSymmetricKey}"
+                  }
+                })
+                {
+                  document {
+                    id
+                    profileID
+                    profile {
+                      id
+                      name
+                      avatar
+                    }
+                    body
+                    unifiedAccessControlConditions
+                    encryptedSymmetricKey
+                  }
+                }
+              }
+            `);
+
+            if (message.errors != null && message.errors.length > 0) {
+              reject(message);
+            } else {
+              resolve(message.data.createChatMessage.document);
+            }
+          } else {
+            reject('Cannot encrypt message')
           }
         } catch (e) {
           reject(e);

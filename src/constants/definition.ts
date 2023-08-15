@@ -29,6 +29,10 @@ export const definition = {
       id: 'kjzl6hvfrbw6c5kxlf7rz62y47sgycum3fu9y6wbbc5gvqwz6rawjqnobchuquf',
       accountRelation: { type: 'list' }
     },
+    Chat: {
+      id: 'kjzl6hvfrbw6c9voacu22d44n9qclr0gte090elzp4yunhvbvkxh3yxlk626p6a',
+      accountRelation: { type: 'list' }
+    },
     GreeniaProfile: {
       id: 'kjzl6hvfrbw6c81xqg432mn3y4am6674c0zhg1aw6sh3d074k8ftsqfv2wez86l',
       accountRelation: { type: 'single' }
@@ -39,6 +43,10 @@ export const definition = {
     },
     GreeniaProfileExperience: {
       id: 'kjzl6hvfrbw6c7rjcz1b8qlrzmyf52zbddm53okcpururos8l3di0zw90d21ckq',
+      accountRelation: { type: 'list' }
+    },
+    ChatMessage: {
+      id: 'kjzl6hvfrbw6c90hsp3vesq1fd9dmzb3d68noja59zqw6dkrq7v3ig2nv5r6myq',
       accountRelation: { type: 'list' }
     }
   },
@@ -112,6 +120,46 @@ export const definition = {
           model:
             'kjzl6hvfrbw6c5kxlf7rz62y47sgycum3fu9y6wbbc5gvqwz6rawjqnobchuquf',
           property: 'targetProfileID'
+        }
+      },
+      chats: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryConnection',
+          model:
+            'kjzl6hvfrbw6c9voacu22d44n9qclr0gte090elzp4yunhvbvkxh3yxlk626p6a',
+          property: 'profileID'
+        }
+      },
+      chatsCount: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryCount',
+          model:
+            'kjzl6hvfrbw6c9voacu22d44n9qclr0gte090elzp4yunhvbvkxh3yxlk626p6a',
+          property: 'profileID'
+        }
+      },
+      receivedChats: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryConnection',
+          model:
+            'kjzl6hvfrbw6c9voacu22d44n9qclr0gte090elzp4yunhvbvkxh3yxlk626p6a',
+          property: 'recipientProfileID'
+        }
+      },
+      receivedChatsCount: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryCount',
+          model:
+            'kjzl6hvfrbw6c9voacu22d44n9qclr0gte090elzp4yunhvbvkxh3yxlk626p6a',
+          property: 'recipientProfileID'
         }
       }
     },
@@ -327,6 +375,53 @@ export const definition = {
         }
       }
     },
+    Chat: {
+      createdAt: { type: 'datetime', required: true },
+      isDeleted: { type: 'boolean', required: true },
+      profileID: { type: 'streamid', required: true },
+      recipientProfileID: { type: 'streamid', required: true },
+      creator: { type: 'view', viewType: 'documentAccount' },
+      profile: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'document',
+          model:
+            'kjzl6hvfrbw6c7g3x1rriupy6k8nn89xqyv9h7ubeelsoshd78d9zbgrajrgu0x',
+          property: 'profileID'
+        }
+      },
+      recipientProfile: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'document',
+          model:
+            'kjzl6hvfrbw6c7g3x1rriupy6k8nn89xqyv9h7ubeelsoshd78d9zbgrajrgu0x',
+          property: 'recipientProfileID'
+        }
+      },
+      messages: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryConnection',
+          model:
+            'kjzl6hvfrbw6c90hsp3vesq1fd9dmzb3d68noja59zqw6dkrq7v3ig2nv5r6myq',
+          property: 'chatID'
+        }
+      },
+      messagesCount: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryCount',
+          model:
+            'kjzl6hvfrbw6c90hsp3vesq1fd9dmzb3d68noja59zqw6dkrq7v3ig2nv5r6myq',
+          property: 'chatID'
+        }
+      }
+    },
     GreeniaProfile: {
       bio: { type: 'string', required: false },
       cover: { type: 'string', required: false },
@@ -399,6 +494,35 @@ export const definition = {
           property: 'greeniaProfileID'
         }
       }
+    },
+    ChatMessage: {
+      body: { type: 'string', required: true },
+      chatID: { type: 'streamid', required: true },
+      createdAt: { type: 'datetime', required: true },
+      profileID: { type: 'streamid', required: true },
+      encryptedSymmetricKey: { type: 'string', required: true },
+      unifiedAccessControlConditions: { type: 'string', required: true },
+      chat: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'document',
+          model:
+            'kjzl6hvfrbw6c9voacu22d44n9qclr0gte090elzp4yunhvbvkxh3yxlk626p6a',
+          property: 'chatID'
+        }
+      },
+      creator: { type: 'view', viewType: 'documentAccount' },
+      profile: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'document',
+          model:
+            'kjzl6hvfrbw6c7g3x1rriupy6k8nn89xqyv9h7ubeelsoshd78d9zbgrajrgu0x',
+          property: 'profileID'
+        }
+      }
     }
   },
   enums: {},
@@ -416,6 +540,7 @@ export const definition = {
       name: 'ArticlePermissionRequestStatus'
     },
     followList: { type: 'connection', name: 'Follow' },
+    chatList: { type: 'connection', name: 'Chat' },
     greeniaProfile: { type: 'node', name: 'GreeniaProfile' },
     greeniaProfileEducationList: {
       type: 'connection',
@@ -424,6 +549,7 @@ export const definition = {
     greeniaProfileExperienceList: {
       type: 'connection',
       name: 'GreeniaProfileExperience'
-    }
+    },
+    chatMessageList: { type: 'connection', name: 'ChatMessage' }
   }
 };
