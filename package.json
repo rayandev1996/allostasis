@@ -1,5 +1,5 @@
 {
-  "name": "@allostasis/js-sdk",
+  "name": "allostasis-js-sdk",
   "version": "1.0.0",
   "description": "Allostasis data management",
   "main": "index.js",
