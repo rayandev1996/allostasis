@@ -23,7 +23,7 @@ import _ from 'lodash';
 import dayjs from 'dayjs';
 import { chatMessageAccessControlGenerator, encryptString } from './utils/lit';
 
-export class Allostasis<CT extends Communities> {
+export default class Allostasis {
   private community: keyof Communities;
   private nodeURL: string;
   private provider: any;
