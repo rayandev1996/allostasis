@@ -122,6 +122,9 @@ export default class Allostasis {
               }
             }
 
+            this.ceramic.did = session.did;
+            this.composeClient.setDID(session.did);
+
             resolve({ did: session.did, address: address ?? '' });
           } else {
             reject('Getting auth method failed');
