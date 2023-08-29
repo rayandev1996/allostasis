@@ -21,25 +21,35 @@ import { Web3Provider } from '@ethersproject/providers';
 import { ethConnect } from '@lit-protocol/auth-browser';
 import _ from 'lodash';
 import dayjs from 'dayjs';
-import { chatMessageAccessControlGenerator, encryptString } from './utils/lit';
+import {
+  chatMessageAccessControlGenerator,
+  decodeB64,
+  encryptString,
+  getAuthSig
+} from './utils/lit';
+import { create as createIPFS, IPFSHTTPClient } from 'ipfs-http-client';
+import { MyBlobToBuffer } from './utils/file';
 
-export default class Allostasis {
-  private community: keyof Communities;
+export default class Allostasis<
+  TCommunity extends keyof Communities = keyof Communities
+> {
+  private community: TCommunity;
   private nodeURL: string;
-  private provider: any;
-  private chain: Chain;
-  private ceramic: CeramicClient;
-  private composeClient: ComposeClient;
-  private lit: LitNodeClient;
+  public provider: any;
+  public chain: Chain;
+  public ceramic: CeramicClient;
+  public composeClient: ComposeClient;
+  public lit: LitNodeClient;
+  public ipfs: IPFSHTTPClient;
 
-  constructor(community: keyof Communities, options: AllostasisConstructor) {
+  constructor(community: TCommunity, options: AllostasisConstructor) {
     this.nodeURL = options.nodeURL;
     this.community = community;
 
     if (options.chain) {
       this.chain = options.chain;
     } else {
-      this.chain = { name: 'mumbai', code: 80001 };
+      this.chain = { name: 'mumbai', id: 80001 };
     }
 
     if (!options.provider) {
@@ -64,6 +74,19 @@ export default class Allostasis {
     this.lit = new LitJsSdk.LitNodeClient({
       alertWhenUnauthorized: false,
       debug: false
+    });
+
+    this.ipfs = createIPFS({
+      url: _.get(options, 'infura.url', ''),
+      headers: {
+        authorization:
+          'Basic ' +
+          btoa(
+            _.get(options, 'infura.projectId', '') +
+              ':' +
+              _.get(options, 'infura.apiKey', '')
+          )
+      }
     });
   }
 
@@ -123,7 +146,7 @@ export default class Allostasis {
             }
 
             await this.ceramic.setDID(session.did);
-            await this.composeClient.setDID(session.did);
+            this.composeClient.setDID(session.did);
 
             resolve({ did: session.did, address: address ?? '' });
           } else {
@@ -179,7 +202,7 @@ export default class Allostasis {
             await store.setItem('lit-auth-signature', _userAuthSig);
           }
 
-          this.ceramic.did = session.did;
+          await this.ceramic.setDID(session.did);
           this.composeClient.setDID(session.did);
 
           resolve({ did: session.did, address: address ?? '' });
@@ -190,9 +213,9 @@ export default class Allostasis {
     });
   }
 
-  async createOrUpdateProfile<T extends typeof this.community>(
-    params: ProfileTypeBasedOnCommunities<T>
-  ): Promise<ProfileTypeBasedOnCommunities<T>> {
+  async createOrUpdateProfile(
+    params: ProfileTypeBasedOnCommunities<TCommunity>
+  ): Promise<ProfileTypeBasedOnCommunities<TCommunity>> {
     return new Promise((resolve, reject) => {
       (async () => {
         try {
@@ -269,31 +292,7 @@ export default class Allostasis {
                 ) {
                   reject(createGreenia);
                 } else {
-                  const update = await this.composeClient.executeQuery<{
-                    createProfile: { document: Profile };
-                  }>(`
-                    mutation {
-                      createProfile(input: {
-                        content:{
-                          greeniaProfileID: "${createGreenia.data.createGreeniaProfile.document.id}"
-                        }
-                      })
-                      {
-                        document {
-                          id
-                          name
-                          email
-                          avatar
-                        }
-                      }
-                    }
-                  `);
-
-                  if (update.errors != null && update.errors.length > 0) {
-                    reject(update);
-                  } else {
-                    resolve(params);
-                  }
+                  resolve(params);
                 }
                 break;
               default:
@@ -307,7 +306,7 @@ export default class Allostasis {
     });
   }
 
-  async getProfile(): Promise<Profile | GreeniaProfile> {
+  async getProfile(): Promise<ProfileTypeBasedOnCommunities<TCommunity>> {
     return new Promise((resolve, reject) => {
       (async () => {
         try {
@@ -321,22 +320,45 @@ export default class Allostasis {
                   name
                   email
                   avatar
-                  articles(last: 300) {
+                  chats {
                     edges {
                       node {
                         id
-                        body
+                        createdAt
                         isDeleted
-                        isEncrypted
-                        price
-                        shortDescription
-                        tags
-                        thumbnail
-                        title
-                        encryptedSymmetricKey
-                        unifiedAccessControlConditions
-                        commentsCount
-                        likesCount
+                        profileID
+                        profile {
+                          id
+                          name
+                          avatar
+                        }
+                        recipientProfileID
+                        recipientProfile {
+                          id
+                          name
+                          avatar
+                        }
+                      }
+                    }
+                  }
+                  receivedChats {
+                    edges {
+                      node {
+                        id
+                        createdAt
+                        isDeleted
+                        profileID
+                        profile {
+                          id
+                          name
+                          avatar
+                        }
+                        recipientProfileID
+                        recipientProfile {
+                          id
+                          name
+                          avatar
+                        }
                       }
                     }
                   }
@@ -350,32 +372,17 @@ export default class Allostasis {
           } else {
             if (profile.data?.viewer?.profile != null) {
               const profileData = {
-                ...profile.data?.viewer?.profile,
-                educations: _.get(
-                  profile.data.viewer.profile,
-                  'educations.edges',
-                  []
-                ).map((i: { node: any }) => i.node),
-                experiences: _.get(
-                  profile.data.viewer.profile,
-                  'experiences.edges',
-                  []
-                ).map((i: { node: any }) => i.node),
-                articles: _.get(
-                  profile.data.viewer.profile,
-                  'articles.edges',
-                  []
-                ).map((i: { node: any }) => i.node)
+                ...profile.data?.viewer?.profile
               };
 
               switch (this.community) {
                 case 'greenia':
                   const greeniaProfile = await this.composeClient.executeQuery<{
-                    viewer: { profile: GreeniaProfile };
+                    viewer: { greeniaProfile: GreeniaProfile };
                   }>(`
                     query {
                       viewer {
-                        profile {
+                        greeniaProfile {
                           id
                           bio
                           cover
@@ -408,6 +415,25 @@ export default class Allostasis {
                               }
                             }
                           }
+                          articles(last: 300) {
+                            edges {
+                              node {
+                                id
+                                body
+                                isDeleted
+                                isEncrypted
+                                price
+                                shortDescription
+                                tags
+                                thumbnail
+                                title
+                                encryptedSymmetricKey
+                                unifiedAccessControlConditions
+                                commentsCount
+                                likesCount
+                              }
+                            }
+                          }
                         }
                       }
                     }
@@ -419,21 +445,26 @@ export default class Allostasis {
                   ) {
                     reject(greeniaProfile);
                   } else {
-                    if (greeniaProfile.data?.viewer?.profile != null) {
+                    if (greeniaProfile.data?.viewer?.greeniaProfile != null) {
                       resolve({
                         ...profileData,
-                        ...greeniaProfile.data?.viewer?.profile,
+                        ...greeniaProfile.data?.viewer?.greeniaProfile,
                         educations: _.get(
-                          profile.data.viewer.profile,
+                          greeniaProfile.data.viewer.greeniaProfile,
                           'educations.edges',
                           []
                         ).map((i: { node: any }) => i.node),
                         experiences: _.get(
-                          profile.data.viewer.profile,
+                          greeniaProfile.data.viewer.greeniaProfile,
                           'experiences.edges',
                           []
+                        ).map((i: { node: any }) => i.node),
+                        articles: _.get(
+                          greeniaProfile.data.viewer.greeniaProfile,
+                          'articles.edges',
+                          []
                         ).map((i: { node: any }) => i.node)
-                      });
+                      } as GreeniaProfile);
                     } else {
                       reject(greeniaProfile);
                     }
@@ -453,9 +484,7 @@ export default class Allostasis {
     });
   }
 
-  async getUserProfile(
-    id: string
-  ): Promise<ProfileTypeBasedOnCommunities<typeof this.community>> {
+  async getUserProfile(id: string): Promise<Profile> {
     return new Promise((resolve, reject) => {
       (async () => {
         const profile = await this.composeClient.executeQuery<{
@@ -471,12 +500,6 @@ export default class Allostasis {
                 name
                 email
                 avatar
-                greeniaProfileID
-                embodiaProfileID
-                avatiaProfileID
-                centeriaProfileID
-                incarniaProfileID
-                weariaProfileID
                 chats {
                   edges {
                     node {
@@ -527,78 +550,114 @@ export default class Allostasis {
         if (profile.errors != null && profile.errors.length > 0) {
           reject(profile);
         } else {
-          switch (this.community) {
-            case 'greenia':
-              if (
-                profile.data.node.greeniaProfileID != null &&
-                profile.data.node.greeniaProfileID !== ''
-              ) {
-                const greeniaProfile = await this.composeClient.executeQuery<{
-                  node: GreeniaProfile;
-                }>(`
-                  query {
-                    node(id: "${profile.data.node.greeniaProfileID}") {
-                      ... on GreeniaProfile {
-                        cover
-                        bio
-                        skills
-                        experiences(last:300) {
-                          edges {
-                            node {
-                              id
-                              city
-                              title
-                              company
-                              endDate
-                              startDate
-                              description
-                              isDeleted
-                            }
-                          }
+          resolve({
+            ...profile.data.node,
+            chats: profile.data.node.chats.edges.map((chat) => chat.node),
+            receivedChats: profile.data.node.receivedChats.edges.map(
+              (chat) => chat.node
+            )
+          });
+        }
+      })();
+    });
+  }
+
+  async getCommunityUserProfile(
+    id: string
+  ): Promise<ProfileTypeBasedOnCommunities<TCommunity>> {
+    return new Promise((resolve, reject) => {
+      (async () => {
+        switch (this.community) {
+          case 'greenia':
+            const greeniaProfile = await this.composeClient.executeQuery<{
+              node: GreeniaProfile;
+            }>(`
+              query {
+                node(id: "${id}") {
+                  ... on GreeniaProfile {
+                    cover
+                    bio
+                    skills
+                    experiences(last:300) {
+                      edges {
+                        node {
+                          id
+                          city
+                          title
+                          company
+                          endDate
+                          startDate
+                          description
+                          isDeleted
                         }
-                        educations(last:300) {
-                          edges {
-                            node {
-                              id
-                              city
-                              title
-                              school
-                              endDate
-                              startDate
-                              description
-                              isDeleted
-                            }
-                          }
+                      }
+                    }
+                    educations(last:300) {
+                      edges {
+                        node {
+                          id
+                          city
+                          title
+                          school
+                          endDate
+                          startDate
+                          description
+                          isDeleted
+                        }
+                      }
+                    }
+                    articles(last: 300) {
+                      edges {
+                        node {
+                          id
+                          body
+                          isDeleted
+                          isEncrypted
+                          price
+                          shortDescription
+                          tags
+                          thumbnail
+                          title
+                          encryptedSymmetricKey
+                          unifiedAccessControlConditions
+                          commentsCount
+                          likesCount
                         }
                       }
                     }
                   }
-                `);
-
-                if (
-                  greeniaProfile.errors != null &&
-                  greeniaProfile.errors.length > 0
-                ) {
-                  reject(greeniaProfile);
-                } else {
-                  resolve({
-                    ...profile.data.node,
-                    chats: profile.data.node.chats.edges.map(
-                      (chat) => chat.node
-                    ),
-                    receivedChats: profile.data.node.receivedChats.edges.map(
-                      (chat) => chat.node
-                    ),
-                    ...greeniaProfile.data.node
-                  });
                 }
-              } else {
-                reject(profile);
               }
-              break;
-            default:
-              reject('Wrong Community');
-          }
+            `);
+
+            if (
+              greeniaProfile.errors != null &&
+              greeniaProfile.errors.length > 0
+            ) {
+              reject(greeniaProfile);
+            } else {
+              resolve({
+                ...greeniaProfile.data.node,
+                educations: _.get(
+                  greeniaProfile.data.node,
+                  'educations.edges',
+                  []
+                ).map((i: { node: any }) => i.node),
+                experiences: _.get(
+                  greeniaProfile.data.node,
+                  'experiences.edges',
+                  []
+                ).map((i: { node: any }) => i.node),
+                articles: _.get(
+                  greeniaProfile.data.node,
+                  'articles.edges',
+                  []
+                ).map((i: { node: any }) => i.node)
+              } as GreeniaProfile);
+            }
+            break;
+          default:
+            reject('Wrong Community');
         }
       })();
     });
@@ -730,7 +789,7 @@ export default class Allostasis {
     });
   }
 
-  async sendMessage(
+  async sendChatMessage(
     content: string,
     chatId: string,
     profileId: string,
@@ -754,16 +813,20 @@ export default class Allostasis {
               mutation {
                 createChatMessage(input: {
                   content:{
+                    messageType: "text",
                     chatID: "${chatId}",
                     profileID: "${profileId}",
                     createdAt: "${dayjs().toISOString()}",
                     body: "${encryption.encryptedContent}",
-                    unifiedAccessControlConditions: "${encryption.unifiedAccessControlConditions}",
+                    unifiedAccessControlConditions: "${
+                      encryption.unifiedAccessControlConditions
+                    }",
                     encryptedSymmetricKey: "${encryption.encryptedSymmetricKey}"
                   }
                 })
                 {
                   document {
+                    messageType
                     id
                     profileID
                     profile {
@@ -785,8 +848,127 @@ export default class Allostasis {
               resolve(message.data.createChatMessage.document);
             }
           } else {
-            reject('Cannot encrypt message')
+            reject('Cannot encrypt message');
           }
+        } catch (e) {
+          reject(e);
+        }
+      })();
+    });
+  }
+
+  async sendChatMessageFile(
+    file: Blob,
+    chatId: string,
+    profileId: string,
+    userAddress: string,
+    recipientAddress: string
+  ): Promise<ChatMessage> {
+    return new Promise((resolve, reject) => {
+      (async () => {
+        try {
+          MyBlobToBuffer(file, async (err, buff) => {
+            if (err) {
+              reject(err);
+            } else {
+              let upload;
+
+              if (buff != null) {
+                upload = await this.ipfs?.add(buff);
+              }
+
+              const filePath = upload?.path ?? '';
+
+              const encryption = await encryptString(
+                filePath,
+                chatMessageAccessControlGenerator(
+                  userAddress,
+                  recipientAddress
+                ),
+                this.chain,
+                this.lit
+              );
+
+              if (encryption) {
+                const message = await this.composeClient.executeQuery<{
+                  createChatMessage: { document: ChatMessage };
+                }>(`
+                  mutation {
+                    createChatMessage(input: {
+                      content: {
+                        messageType: "file",
+                        chatID: "${chatId}",
+                        profileID: "${profileId}",
+                        createdAt: "${dayjs().toISOString()}",
+                        body: "${encryption.encryptedContent}",
+                        unifiedAccessControlConditions: "${
+                          encryption.unifiedAccessControlConditions
+                        }",
+                        encryptedSymmetricKey: "${
+                          encryption.encryptedSymmetricKey
+                        }"
+                      }
+                    })
+                    {
+                      document {
+                        messageType
+                        id
+                        profileID
+                        profile {
+                          id
+                          name
+                          avatar
+                        }
+                        body
+                        unifiedAccessControlConditions
+                        encryptedSymmetricKey
+                      }
+                    }
+                  }
+                `);
+
+                if (message.errors != null && message.errors.length > 0) {
+                  reject(message);
+                } else {
+                  resolve(message.data.createChatMessage.document);
+                }
+              } else {
+                reject('Cannot encrypt message');
+              }
+            }
+          });
+        } catch (e) {
+          reject(e);
+        }
+      })();
+    });
+  }
+
+  async decryptContent(
+    content: string,
+    unifiedAccessControlConditions: string,
+    encryptedSymmetricKey: string
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
+      (async () => {
+        try {
+          const store = new Store();
+          const authSig = await getAuthSig(store);
+          const decodedString = decodeB64(content);
+          const _access = JSON.parse(atob(unifiedAccessControlConditions));
+          const decryptedSymmetricKey = await this.lit.getEncryptionKey({
+            unifiedAccessControlConditions: _access,
+            toDecrypt: encryptedSymmetricKey,
+            chain: `${this.chain.id}`,
+            authSig
+          });
+          const _blob = new Blob([decodedString]);
+          const decryptedString = await LitJsSdk.decryptString(
+            _blob,
+            decryptedSymmetricKey
+          );
+
+          resolve(decryptedString);
         } catch (e) {
           reject(e);
         }

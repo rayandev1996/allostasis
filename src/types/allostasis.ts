@@ -9,11 +9,16 @@ export interface AllostasisConstructor {
   nodeURL: string;
   provider?: any;
   chain?: Chain;
+  infura: {
+    url?: string;
+    projectId: string;
+    apiKey: string
+  }
 }
 
 export interface Chain {
-  name: 'mumbai';
-  code: number;
+  name: string;
+  id: number | string;
 }
 
 export type Communities = {
@@ -30,12 +35,6 @@ export interface Profile {
   name?: string;
   email?: string;
   avatar?: string;
-  greeniaProfileID?: string;
-  embodiaProfileID?: string;
-  avatiaProfileID?: string;
-  centeriaProfileID?: string;
-  incarniaProfileID?: string;
-  weariaProfileID?: string;
   chats?: Chat[];
   receivedChats?: Chat[];
 }
@@ -54,6 +53,7 @@ export interface Chat {
 
 export interface ChatMessage {
   id?: string;
+  messageType?: 'text' | 'file';
   createdAt?: string;
   profile?: Profile;
   body?: string;

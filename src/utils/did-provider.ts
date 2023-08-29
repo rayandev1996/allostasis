@@ -14,7 +14,7 @@ export async function getAuthMethod(
         reject(false);
       }
 
-      const defaultChain = chain.code;
+      const defaultChain = chain.id;
       const address = addresses[0].toLowerCase();
       const accountId = await getAccountId(provider, address);
 

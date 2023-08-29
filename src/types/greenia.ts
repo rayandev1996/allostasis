@@ -6,6 +6,7 @@ export interface GreeniaProfile extends Profile {
     skills?: string[];
     educations: GreeniaProfileEducation[];
     experiences: GreeniaProfileExperience[];
+    articles: GreeniaArticle[];
 }
 
 export interface GreeniaProfileEducation {
@@ -28,4 +29,8 @@ export interface GreeniaProfileExperience {
     endDate?: Date;
     description: string;
     isDeleted: boolean;
+}
+
+export interface GreeniaArticle {
+    id?: string
 }
