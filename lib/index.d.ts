@@ -26,7 +26,7 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
     getProfile(): Promise<ProfileTypeBasedOnCommunities<TCommunity>>;
     getUserProfile(id: string): Promise<Profile>;
     getCommunityUserProfile(id: string): Promise<ProfileTypeBasedOnCommunities<TCommunity>>;
-    createChat(recipient: string): Promise<Chat>;
+    createChat(me: string, recipient: string): Promise<Chat>;
     getChat(id: string): Promise<Chat>;
     sendChatMessage(content: string, chatId: string, profileId: string, userAddress: string, recipientAddress: string): Promise<ChatMessage>;
     sendChatMessageFile(file: Blob, chatId: string, profileId: string, userAddress: string, recipientAddress: string): Promise<ChatMessage>;
