@@ -1,6 +1,6 @@
 {
   "name": "allostasis-js-sdk",
-  "version": "1.0.3",
+  "version": "1.0.25",
   "description": "Allostasis data management",
   "main": "index.js",
   "scripts": {
@@ -8,19 +8,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rezashams1/allostasis.git"
+    "url": "git+https://github.com/rayandev1996/allostasis.git"
   },
   "keywords": [
     "Allostasis",
     "DAO",
     "JS-SDK"
   ],
-  "author": "Reza Shams",
+  "author": "Rayan",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/rezashams1/allostasis/issues"
+    "url": "https://github.com/rayandev1996/allostasis/issues"
   },
-  "homepage": "https://github.com/rezashams1/allostasis#readme",
+  "homepage": "https://github.com/rayandev1996/allostasis#readme",
   "devDependencies": {
     "typescript": "^5.1.6"
   },
@@ -34,7 +34,8 @@
     "blob-to-buffer": "^1.2.9",
     "dayjs": "^1.11.9",
     "did-session": "^2.0.1",
-    "ipfs-http-client": "^60.0.1",
+    "ipfs-http-client": "^60.0.0",
+    "kubo-rpc-client": "^3.0.1",
     "lodash": "^4.17.21"
   }
 }

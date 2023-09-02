@@ -6,49 +6,55 @@ export declare const definition: {
                 type: string;
             };
         };
-        Article: {
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        ArticleComment: {
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        ArticleLike: {
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        ArticlePermissionRequest: {
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        ArticlePermissionRequestStatus: {
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        Follow: {
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
         Chat: {
             id: string;
             accountRelation: {
                 type: string;
             };
         };
+        ChatMessage: {
+            id: string;
+            accountRelation: {
+                type: string;
+            };
+        };
         GreeniaProfile: {
+            id: string;
+            accountRelation: {
+                type: string;
+            };
+        };
+        GreeniaArticle: {
+            id: string;
+            accountRelation: {
+                type: string;
+            };
+        };
+        GreeniaArticleComment: {
+            id: string;
+            accountRelation: {
+                type: string;
+            };
+        };
+        GreeniaArticleLike: {
+            id: string;
+            accountRelation: {
+                type: string;
+            };
+        };
+        GreeniaArticlePermissionRequest: {
+            id: string;
+            accountRelation: {
+                type: string;
+            };
+        };
+        GreeniaArticlePermissionRequestStatus: {
+            id: string;
+            accountRelation: {
+                type: string;
+            };
+        };
+        GreeniaFollow: {
             id: string;
             accountRelation: {
                 type: string;
@@ -61,12 +67,6 @@ export declare const definition: {
             };
         };
         GreeniaProfileExperience: {
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        ChatMessage: {
             id: string;
             accountRelation: {
                 type: string;
@@ -87,35 +87,11 @@ export declare const definition: {
                 type: string;
                 required: boolean;
             };
-            avatiaProfileID: {
-                type: string;
-                required: boolean;
-            };
-            weariaProfileID: {
-                type: string;
-                required: boolean;
-            };
-            embodiaProfileID: {
-                type: string;
-                required: boolean;
-            };
-            greeniaProfileID: {
-                type: string;
-                required: boolean;
-            };
-            centeriaProfileID: {
-                type: string;
-                required: boolean;
-            };
-            incarniaProfileID: {
-                type: string;
-                required: boolean;
-            };
             creator: {
                 type: string;
                 viewType: string;
             };
-            articles: {
+            chats: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -124,7 +100,183 @@ export declare const definition: {
                     property: string;
                 };
             };
-            articlesCount: {
+            chatsCount: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            receivedChats: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            receivedChatsCount: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+        };
+        Chat: {
+            createdAt: {
+                type: string;
+                required: boolean;
+            };
+            isDeleted: {
+                type: string;
+                required: boolean;
+            };
+            profileID: {
+                type: string;
+                required: boolean;
+            };
+            relationID: {
+                type: string;
+                required: boolean;
+            };
+            recipientProfileID: {
+                type: string;
+                required: boolean;
+            };
+            creator: {
+                type: string;
+                viewType: string;
+            };
+            profile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            recipientProfile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            messages: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            messagesCount: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+        };
+        ChatMessage: {
+            body: {
+                type: string;
+                required: boolean;
+            };
+            chatID: {
+                type: string;
+                required: boolean;
+            };
+            createdAt: {
+                type: string;
+                required: boolean;
+            };
+            profileID: {
+                type: string;
+                required: boolean;
+            };
+            messageType: {
+                type: string;
+                required: boolean;
+            };
+            encryptedSymmetricKey: {
+                type: string;
+                required: boolean;
+            };
+            unifiedAccessControlConditions: {
+                type: string;
+                required: boolean;
+            };
+            chat: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            creator: {
+                type: string;
+                viewType: string;
+            };
+            profile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+        };
+        GreeniaProfile: {
+            bio: {
+                type: string;
+                required: boolean;
+            };
+            cover: {
+                type: string;
+                required: boolean;
+            };
+            skills: {
+                type: string;
+                required: boolean;
+                item: {
+                    type: string;
+                    required: boolean;
+                };
+            };
+            profileID: {
+                type: string;
+                required: boolean;
+            };
+            creator: {
+                type: string;
+                viewType: string;
+            };
+            experiences: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            educations: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -169,7 +321,7 @@ export declare const definition: {
                     property: string;
                 };
             };
-            chats: {
+            articles: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -178,25 +330,7 @@ export declare const definition: {
                     property: string;
                 };
             };
-            chatsCount: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            receivedChats: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            receivedChatsCount: {
+            articlesCount: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -206,7 +340,7 @@ export declare const definition: {
                 };
             };
         };
-        Article: {
+        GreeniaArticle: {
             body: {
                 type: string;
                 required: boolean;
@@ -227,10 +361,6 @@ export declare const definition: {
                 type: string;
                 required: boolean;
             };
-            community: {
-                type: string;
-                required: boolean;
-            };
             createdAt: {
                 type: string;
                 required: boolean;
@@ -239,15 +369,15 @@ export declare const definition: {
                 type: string;
                 required: boolean;
             };
-            profileID: {
-                type: string;
-                required: boolean;
-            };
             thumbnail: {
                 type: string;
                 required: boolean;
             };
             isEncrypted: {
+                type: string;
+                required: boolean;
+            };
+            greeniaProfileID: {
                 type: string;
                 required: boolean;
             };
@@ -267,7 +397,7 @@ export declare const definition: {
                 type: string;
                 viewType: string;
             };
-            profile: {
+            greeniaProfile: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -322,7 +452,7 @@ export declare const definition: {
                 };
             };
         };
-        ArticleComment: {
+        GreeniaArticleComment: {
             content: {
                 type: string;
                 required: boolean;
@@ -332,10 +462,6 @@ export declare const definition: {
                 required: boolean;
             };
             isDeleted: {
-                type: string;
-                required: boolean;
-            };
-            profileID: {
                 type: string;
                 required: boolean;
             };
@@ -343,6 +469,10 @@ export declare const definition: {
                 type: string;
                 required: boolean;
             };
+            greeniaProfileID: {
+                type: string;
+                required: boolean;
+            };
             article: {
                 type: string;
                 viewType: string;
@@ -356,7 +486,7 @@ export declare const definition: {
                 type: string;
                 viewType: string;
             };
-            profile: {
+            greeniaProfile: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -366,7 +496,7 @@ export declare const definition: {
                 };
             };
         };
-        ArticleLike: {
+        GreeniaArticleLike: {
             articleID: {
                 type: string;
                 required: boolean;
@@ -375,7 +505,7 @@ export declare const definition: {
                 type: string;
                 required: boolean;
             };
-            profileID: {
+            greeniaProfileID: {
                 type: string;
                 required: boolean;
             };
@@ -392,7 +522,7 @@ export declare const definition: {
                 type: string;
                 viewType: string;
             };
-            profile: {
+            greeniaProfile: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -402,7 +532,7 @@ export declare const definition: {
                 };
             };
         };
-        ArticlePermissionRequest: {
+        GreeniaArticlePermissionRequest: {
             content: {
                 type: string;
                 required: boolean;
@@ -415,7 +545,7 @@ export declare const definition: {
                 type: string;
                 required: boolean;
             };
-            profileID: {
+            greeniaProfileID: {
                 type: string;
                 required: boolean;
             };
@@ -432,7 +562,7 @@ export declare const definition: {
                 type: string;
                 viewType: string;
             };
-            profile: {
+            greeniaProfile: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -451,7 +581,7 @@ export declare const definition: {
                 };
             };
         };
-        ArticlePermissionRequestStatus: {
+        GreeniaArticlePermissionRequestStatus: {
             status: {
                 type: string;
                 required: boolean;
@@ -474,56 +604,16 @@ export declare const definition: {
                 };
             };
         };
-        Follow: {
+        GreeniaFollow: {
             isDeleted: {
                 type: string;
                 required: boolean;
             };
-            profileID: {
+            greeniaProfileID: {
                 type: string;
                 required: boolean;
             };
-            targetProfileID: {
-                type: string;
-                required: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            targetProfile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
-        Chat: {
-            createdAt: {
-                type: string;
-                required: boolean;
-            };
-            isDeleted: {
-                type: string;
-                required: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-            };
-            recipientProfileID: {
+            targetGreeniaProfileID: {
                 type: string;
                 required: boolean;
             };
@@ -531,7 +621,7 @@ export declare const definition: {
                 type: string;
                 viewType: string;
             };
-            profile: {
+            greeniaProfile: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -540,69 +630,7 @@ export declare const definition: {
                     property: string;
                 };
             };
-            recipientProfile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            messages: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            messagesCount: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
-        GreeniaProfile: {
-            bio: {
-                type: string;
-                required: boolean;
-            };
-            cover: {
-                type: string;
-                required: boolean;
-            };
-            skills: {
-                type: string;
-                required: boolean;
-                item: {
-                    type: string;
-                    required: boolean;
-                };
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            experiences: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            educations: {
+            targetGreeniaProfile: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -706,54 +734,6 @@ export declare const definition: {
                 };
             };
         };
-        ChatMessage: {
-            body: {
-                type: string;
-                required: boolean;
-            };
-            chatID: {
-                type: string;
-                required: boolean;
-            };
-            createdAt: {
-                type: string;
-                required: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-            };
-            encryptedSymmetricKey: {
-                type: string;
-                required: boolean;
-            };
-            unifiedAccessControlConditions: {
-                type: string;
-                required: boolean;
-            };
-            chat: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
     };
     enums: {};
     accountData: {
@@ -761,35 +741,39 @@ export declare const definition: {
             type: string;
             name: string;
         };
-        articleList: {
-            type: string;
-            name: string;
-        };
-        articleCommentList: {
-            type: string;
-            name: string;
-        };
-        articleLikeList: {
-            type: string;
-            name: string;
-        };
-        articlePermissionRequestList: {
-            type: string;
-            name: string;
-        };
-        articlePermissionRequestStatusList: {
-            type: string;
-            name: string;
-        };
-        followList: {
-            type: string;
-            name: string;
-        };
         chatList: {
             type: string;
             name: string;
         };
+        chatMessageList: {
+            type: string;
+            name: string;
+        };
         greeniaProfile: {
+            type: string;
+            name: string;
+        };
+        greeniaArticleList: {
+            type: string;
+            name: string;
+        };
+        greeniaArticleCommentList: {
+            type: string;
+            name: string;
+        };
+        greeniaArticleLikeList: {
+            type: string;
+            name: string;
+        };
+        greeniaArticlePermissionRequestList: {
+            type: string;
+            name: string;
+        };
+        greeniaArticlePermissionRequestStatusList: {
+            type: string;
+            name: string;
+        };
+        greeniaFollowList: {
             type: string;
             name: string;
         };
@@ -798,10 +782,6 @@ export declare const definition: {
             name: string;
         };
         greeniaProfileExperienceList: {
-            type: string;
-            name: string;
-        };
-        chatMessageList: {
             type: string;
             name: string;
         };

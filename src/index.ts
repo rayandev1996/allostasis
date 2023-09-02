@@ -27,7 +27,7 @@ import {
   encryptString,
   getAuthSig
 } from './utils/lit';
-import { create as createIPFS, IPFSHTTPClient } from 'ipfs-http-client';
+import { create as createIPFS, IPFSHTTPClient } from 'kubo-rpc-client';
 import { MyBlobToBuffer } from './utils/file';
 
 export default class Allostasis<
@@ -97,6 +97,11 @@ export default class Allostasis<
         await this.lit.connect();
 
         try {
+          await this.provider.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: `0x${this.chain.id.toString(16)}` }]
+          });
+
           const { authMethod, address } = await getAuthMethod(
             this.provider,
             this.chain
@@ -148,7 +153,7 @@ export default class Allostasis<
             await this.ceramic.setDID(session.did);
             this.composeClient.setDID(session.did);
 
-            resolve({ did: session.did, address: address ?? '' });
+            resolve({ did: session.did.id, address: address ?? '' });
           } else {
             reject('Getting auth method failed');
           }
@@ -205,7 +210,7 @@ export default class Allostasis<
           await this.ceramic.setDID(session.did);
           this.composeClient.setDID(session.did);
 
-          resolve({ did: session.did, address: address ?? '' });
+          resolve({ did: session.did.id, address: address ?? '' });
         } catch (e) {
           reject(e);
         }
@@ -292,7 +297,13 @@ export default class Allostasis<
                 ) {
                   reject(createGreenia);
                 } else {
-                  resolve(params);
+                  resolve({
+                    ...create.data.createProfile.document,
+                    ...createGreenia.data.createGreeniaProfile.document,
+                    id: create.data.createProfile.document.id,
+                    greeniaProfileId:
+                      createGreenia.data.createGreeniaProfile.document.id
+                  } as GreeniaProfile);
                 }
                 break;
               default:
@@ -320,7 +331,7 @@ export default class Allostasis<
                   name
                   email
                   avatar
-                  chats {
+                  chats(last: 300) {
                     edges {
                       node {
                         id
@@ -341,7 +352,7 @@ export default class Allostasis<
                       }
                     }
                   }
-                  receivedChats {
+                  receivedChats(last: 300) {
                     edges {
                       node {
                         id
@@ -372,7 +383,17 @@ export default class Allostasis<
           } else {
             if (profile.data?.viewer?.profile != null) {
               const profileData = {
-                ...profile.data?.viewer?.profile
+                ...profile.data?.viewer?.profile,
+                chats: _.get(
+                  profile.data.viewer.profile,
+                  'chats.edges',
+                  []
+                ).map((i: { node: any }) => i.node),
+                receivedChats: _.get(
+                  profile.data.viewer.profile,
+                  'receivedChats.edges',
+                  []
+                ).map((i: { node: any }) => i.node)
               };
 
               switch (this.community) {
@@ -449,6 +470,9 @@ export default class Allostasis<
                       resolve({
                         ...profileData,
                         ...greeniaProfile.data?.viewer?.greeniaProfile,
+                        id: profileData.id,
+                        greeniaProfileId:
+                          greeniaProfile.data?.viewer?.greeniaProfile.id,
                         educations: _.get(
                           greeniaProfile.data.viewer.greeniaProfile,
                           'educations.edges',
@@ -500,7 +524,7 @@ export default class Allostasis<
                 name
                 email
                 avatar
-                chats {
+                chats(last: 300) {
                   edges {
                     node {
                       id
@@ -521,7 +545,7 @@ export default class Allostasis<
                     }
                   }
                 }
-                receivedChats {
+                receivedChats(last: 300) {
                   edges {
                     node {
                       id
@@ -552,10 +576,16 @@ export default class Allostasis<
         } else {
           resolve({
             ...profile.data.node,
-            chats: profile.data.node.chats.edges.map((chat) => chat.node),
-            receivedChats: profile.data.node.receivedChats.edges.map(
-              (chat) => chat.node
-            )
+            chats: _.get(
+                profile.data.node.chats,
+                'edges',
+                []
+            ).map((i: { node: any }) => i.node),
+            receivedChats: _.get(
+                profile.data.node.receivedChats,
+                'edges',
+                []
+            ).map((i: { node: any }) => i.node)
           });
         }
       })();
@@ -636,8 +666,11 @@ export default class Allostasis<
             ) {
               reject(greeniaProfile);
             } else {
+              const { id, ...rest } = greeniaProfile.data.node;
+
               resolve({
-                ...greeniaProfile.data.node,
+                ...rest,
+                greeniaProfileId: greeniaProfile.data.node.id,
                 educations: _.get(
                   greeniaProfile.data.node,
                   'educations.edges',
@@ -663,11 +696,11 @@ export default class Allostasis<
     });
   }
 
-  async createChat(recipient: string): Promise<Chat> {
+  async createChat(me: string, recipient: string): Promise<Chat> {
     return new Promise((resolve, reject) => {
       (async () => {
         try {
-          const user = await this.getUserProfile(recipient);
+          const user = await this.getUserProfile(me);
           const iHaveCreatedBefore = user.chats.find(
             (x) => x.recipientProfileID === recipient
           );
@@ -751,7 +784,7 @@ export default class Allostasis<
                     avatar
                   }
                   messagesCount
-                  messages {
+                  messages(last: 300) {
                     edges {
                       node {
                         id

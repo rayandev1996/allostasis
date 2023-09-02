@@ -37,6 +37,8 @@ export interface Profile {
   avatar?: string;
   chats?: Chat[];
   receivedChats?: Chat[];
+  did?: string;
+  address?: string;
 }
 
 export interface Chat {
