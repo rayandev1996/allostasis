@@ -31,9 +31,11 @@
     "@didtools/pkh-ethereum": "^0.4.0",
     "@ethersproject/providers": "^5.7.2",
     "@lit-protocol/lit-node-client": "^2.2.47",
+    "@pushprotocol/restapi": "^1.4.19",
     "blob-to-buffer": "^1.2.9",
     "dayjs": "^1.11.9",
     "did-session": "^2.0.1",
+    "ethers": "^5.7.2",
     "ipfs-http-client": "^60.0.0",
     "kubo-rpc-client": "^3.0.1",
     "lodash": "^4.17.21"

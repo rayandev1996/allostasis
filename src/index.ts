@@ -29,6 +29,9 @@ import {
 } from './utils/lit';
 import { create as createIPFS, IPFSHTTPClient } from 'kubo-rpc-client';
 import { MyBlobToBuffer } from './utils/file';
+import {ethers} from "ethers";
+import {IFeeds, IMessageIPFS, Message, MessageWithCID, PushAPI} from '@pushprotocol/restapi';
+import {MessageType} from "@pushprotocol/restapi/src/lib/constants";
 
 export default class Allostasis<
   TCommunity extends keyof Communities = keyof Communities
@@ -41,6 +44,8 @@ export default class Allostasis<
   public composeClient: ComposeClient;
   public lit: LitNodeClient;
   public ipfs: IPFSHTTPClient;
+  public ethersProvider: Web3Provider;
+  public chatUser: PushAPI;
 
   constructor(community: TCommunity, options: AllostasisConstructor) {
     this.nodeURL = options.nodeURL;
@@ -88,6 +93,8 @@ export default class Allostasis<
           )
       }
     });
+
+    this.ethersProvider = new ethers.providers.Web3Provider(this.provider);
   }
 
   async connect(): Promise<{ did: any; address: string }> {
@@ -152,6 +159,8 @@ export default class Allostasis<
 
             await this.ceramic.setDID(session.did);
             this.composeClient.setDID(session.did);
+
+            this.chatUser = await PushAPI.initialize(this.ethersProvider.getSigner());
 
             resolve({ did: session.did.id, address: address ?? '' });
           } else {
@@ -696,63 +705,11 @@ export default class Allostasis<
     });
   }
 
-  async createChat(me: string, recipient: string): Promise<Chat> {
+  async getChats(): Promise<IFeeds[]> {
     return new Promise((resolve, reject) => {
       (async () => {
         try {
-          const user = await this.getUserProfile(me);
-          const iHaveCreatedBefore = user.chats.find(
-            (x) => x.recipientProfileID === recipient
-          );
-          const theyHaveCreatedBefore = user.receivedChats.find(
-            (x) => x.profileID === recipient
-          );
-
-          if (iHaveCreatedBefore != null) {
-            resolve(iHaveCreatedBefore);
-          } else if (theyHaveCreatedBefore != null) {
-            resolve(theyHaveCreatedBefore);
-          } else {
-            const chat = await this.composeClient.executeQuery<{
-              createChat: { document: Chat };
-            }>(`
-              mutation {
-                createChat(input: {
-                  content:{
-                    profileID: "${user.id}",
-                    recipientProfileID: "${recipient}",
-                    createdAt: "${dayjs().toISOString()}",
-                    isDeleted: false
-                  }
-                })
-                {
-                  document {
-                    id
-                    profileID
-                    profile {
-                      id
-                      name
-                      avatar
-                    }
-                    recipientProfileID
-                    recipientProfile {
-                      id
-                      name
-                      avatar
-                    }
-                    createdAt
-                    isDeleted
-                  }
-                }
-              }
-            `);
-
-            if (chat.errors != null && chat.errors.length > 0) {
-              reject(chat);
-            } else {
-              resolve(chat.data.createChat.document);
-            }
-          }
+          resolve(this.chatUser.chat.list("CHATS"));
         } catch (e) {
           reject(e);
         }
@@ -760,133 +717,39 @@ export default class Allostasis<
     });
   }
 
-  async getChat(id: string): Promise<Chat> {
+  async createChat(recipient: string): Promise<MessageWithCID> {
     return new Promise((resolve, reject) => {
-      (async () => {
-        try {
-          const chat = await this.composeClient.executeQuery<{
-            node: Chat & { messages: { edges: { node: ChatMessage }[] } };
-          }>(`
-            query {
-              node(id: "${id}") {
-                ... on Chat {
-                  id
-                  profileID
-                  profile {
-                    id
-                    name
-                    avatar
-                  }
-                  recipientProfileID
-                  recipientProfile {
-                    id
-                    name
-                    avatar
-                  }
-                  messagesCount
-                  messages(last: 300) {
-                    edges {
-                      node {
-                        id
-                        profileID
-                        profile {
-                          id
-                          name
-                          avatar
-                        }
-                        body
-                        unifiedAccessControlConditions
-                        encryptedSymmetricKey
-                      }
-                    }
-                  }
-                  createdAt
-                  isDeleted
-                }
-              }
-            }
-          `);
+      this.chatUser.chat.send(recipient, {
+        type: 'Text',
+        content: 'Hi! I want to chat with  you.'
+      }).then(res => {
+        resolve(res)
+      }).catch(err => {
+        reject(err)
+      })
+    });
+  }
 
-          if (chat.errors != null && chat.errors.length > 0) {
-            reject(chat);
-          } else {
-            resolve({
-              ...chat.data.node,
-              messages: chat.data.node.messages.edges.map((node) => node.node)
-            });
-          }
-        } catch (e) {
-          reject(e);
-        }
-      })();
+  async getChatHistory(recipient: string): Promise<IMessageIPFS[]> {
+    return new Promise((resolve, reject) => {
+      this.chatUser.chat.history(recipient).then(res => {
+        resolve(res)
+      }).catch(err => {
+        reject(err)
+      })
     });
   }
 
   async sendChatMessage(
-    content: string,
-    chatId: string,
-    profileId: string,
-    userAddress: string,
-    recipientAddress: string
-  ): Promise<ChatMessage> {
+    recipient: string,
+    message: Message,
+  ): Promise<MessageWithCID> {
     return new Promise((resolve, reject) => {
-      (async () => {
-        try {
-          const encryption = await encryptString(
-            content,
-            chatMessageAccessControlGenerator(userAddress, recipientAddress),
-            this.chain,
-            this.lit
-          );
-
-          if (encryption) {
-            const message = await this.composeClient.executeQuery<{
-              createChatMessage: { document: ChatMessage };
-            }>(`
-              mutation {
-                createChatMessage(input: {
-                  content:{
-                    messageType: "text",
-                    chatID: "${chatId}",
-                    profileID: "${profileId}",
-                    createdAt: "${dayjs().toISOString()}",
-                    body: "${encryption.encryptedContent}",
-                    unifiedAccessControlConditions: "${
-                      encryption.unifiedAccessControlConditions
-                    }",
-                    encryptedSymmetricKey: "${encryption.encryptedSymmetricKey}"
-                  }
-                })
-                {
-                  document {
-                    messageType
-                    id
-                    profileID
-                    profile {
-                      id
-                      name
-                      avatar
-                    }
-                    body
-                    unifiedAccessControlConditions
-                    encryptedSymmetricKey
-                  }
-                }
-              }
-            `);
-
-            if (message.errors != null && message.errors.length > 0) {
-              reject(message);
-            } else {
-              resolve(message.data.createChatMessage.document);
-            }
-          } else {
-            reject('Cannot encrypt message');
-          }
-        } catch (e) {
-          reject(e);
-        }
-      })();
+      return this.chatUser.chat.send(recipient, message).then(res => {
+        resolve(res)
+      }).catch(err => {
+        reject(err)
+      })
     });
   }
 

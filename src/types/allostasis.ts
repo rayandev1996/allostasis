@@ -42,26 +42,37 @@ export interface Profile {
 }
 
 export interface Chat {
-  id?: string;
-  createdAt?: string;
-  profile?: Profile;
-  profileID?: string;
-  recipientProfile?: Profile;
-  recipientProfileID?: string;
-  isDeleted?: boolean;
-  messagesCount?: number;
-  messages?: ChatMessage[];
+  chatId?: string;
+  about?: string;
+  did?: string;
+  intent?: string;
+  intentSentBy?: string;
+  intentTimestamp?: string;
+  publicKey?: string;
+  profilePicture?: string;
+  threadhash?: string;
+  wallets?: string;
+  combinedDID?: string;
+  name?: string;
+  groupInformation?: string;
+  msg?: ChatMessage;
 }
 
 export interface ChatMessage {
-  id?: string;
-  messageType?: 'text' | 'file';
-  createdAt?: string;
-  profile?: Profile;
-  body?: string;
-  unifiedAccessControlConditions?: string;
-  encryptedSymmetricKey?: string;
-  chat?: Chat;
+  fromDID?: string;
+  toDID?: string;
+  messageObj?: {};
+  messageContent?: string;
+  messageType?: string;
+  timestamp?: number;
+  fromCAIP10?: string;
+  toCAIP10?: string;
+  encryptedSecret?: string;
+  encType?: string;
+  signature?: string;
+  sigType?: string;
+  verificationProof?: string;
+  link?: string;
 }
 
 export type ProfileTypeBasedOnCommunities<T extends keyof Communities> = Communities[T]
