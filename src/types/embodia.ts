@@ -1,3 +1,5 @@
 import {Profile} from "./allostasis";
 
-export interface EmbodiaProfile extends Profile {}
+export interface EmbodiaProfile extends Profile {
+    embodiaProfileId?: string;
+}

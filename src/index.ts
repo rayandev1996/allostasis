@@ -7,31 +7,28 @@ import {
   Profile,
   ProfileTypeBasedOnCommunities
 } from './types/allostasis';
-import { GreeniaProfile } from './types/greenia';
-import { CeramicClient } from '@ceramicnetwork/http-client';
-import { ComposeClient } from '@composedb/client';
+import {GreeniaProfile} from './types/greenia';
+import {CeramicClient} from '@ceramicnetwork/http-client';
+import {ComposeClient} from '@composedb/client';
 import * as LitJsSdk from '@lit-protocol/lit-node-client';
-import { LitNodeClient } from '@lit-protocol/lit-node-client';
-import { definition } from './constants/definition';
-import { RuntimeCompositeDefinition } from '@composedb/types';
-import { Store } from './utils/store';
-import { getAddressFromDid, getAuthMethod } from './utils/did-provider';
-import { DIDSession } from 'did-session';
-import { Web3Provider } from '@ethersproject/providers';
-import { ethConnect } from '@lit-protocol/auth-browser';
+import {LitNodeClient} from '@lit-protocol/lit-node-client';
+import {definition} from './constants/definition';
+import {RuntimeCompositeDefinition} from '@composedb/types';
+import {Store} from './utils/store';
+import {getAddressFromDid, getAuthMethod} from './utils/did-provider';
+import {DIDSession} from 'did-session';
+import {Web3Provider} from '@ethersproject/providers';
+import {ethConnect} from '@lit-protocol/auth-browser';
 import _ from 'lodash';
 import dayjs from 'dayjs';
-import {
-  chatMessageAccessControlGenerator,
-  decodeB64,
-  encryptString,
-  getAuthSig
-} from './utils/lit';
-import { create as createIPFS, IPFSHTTPClient } from 'kubo-rpc-client';
-import { MyBlobToBuffer } from './utils/file';
+import {chatMessageAccessControlGenerator, decodeB64, encryptString, getAuthSig} from './utils/lit';
+import {create as createIPFS, IPFSHTTPClient} from 'kubo-rpc-client';
+import {MyBlobToBuffer} from './utils/file';
 import {ethers} from "ethers";
-import {IFeeds, IMessageIPFS, Message, MessageWithCID, PushAPI} from '@pushprotocol/restapi';
-import {MessageType} from "@pushprotocol/restapi/src/lib/constants";
+import * as PushAPI from '@pushprotocol/restapi';
+import {IFeeds, IMessageIPFS, IUser, Message, MessageWithCID, SignerType} from '@pushprotocol/restapi';
+import {ENV} from "@pushprotocol/restapi/src/lib/constants";
+import {EmbodiaProfile} from "./types/embodia";
 
 export default class Allostasis<
   TCommunity extends keyof Communities = keyof Communities
@@ -45,7 +42,10 @@ export default class Allostasis<
   public lit: LitNodeClient;
   public ipfs: IPFSHTTPClient;
   public ethersProvider: Web3Provider;
-  public chatUser: PushAPI;
+  public ethersSigner: SignerType;
+  public ethersAddress: string;
+  public chatUser: IUser;
+  public pvtKey: any;
 
   constructor(community: TCommunity, options: AllostasisConstructor) {
     this.nodeURL = options.nodeURL;
@@ -157,12 +157,46 @@ export default class Allostasis<
               }
             }
 
-            await this.ceramic.setDID(session.did);
-            this.composeClient.setDID(session.did);
+            this.ethersProvider.send("eth_requestAccounts", []).then(async () => {
+              await this.ceramic.setDID(session.did);
+              this.composeClient.setDID(session.did);
 
-            this.chatUser = await PushAPI.initialize(this.ethersProvider.getSigner());
+              this.ethersSigner = this.ethersProvider.getSigner();
+              this.ethersAddress = address;
 
-            resolve({ did: session.did.id, address: address ?? '' });
+              console.log('Allostasis', 'Getting user')
+
+              const gotUser = await PushAPI.user.get({ account: this.ethersAddress, env: ENV.STAGING });
+
+              console.log('Allostasis', gotUser)
+
+              if (gotUser) {
+                this.chatUser = gotUser;
+              } else {
+                const createUser = await PushAPI.user.create({ account: this.ethersAddress, env: ENV.STAGING });
+
+                console.log('Allostasis', 'Creating user')
+                console.log('Allostasis', createUser)
+
+                this.chatUser = createUser;
+              }
+
+              this.pvtKey = await PushAPI.chat.decryptPGPKey({
+                encryptedPGPPrivateKey: (this.chatUser).encryptedPrivateKey,
+                account: this.ethersAddress,
+                signer: this.ethersSigner,
+                env: ENV.STAGING,
+                toUpgrade: true,
+              });
+
+              resolve({ did: session.did.id, address: address ?? '' });
+            }).catch((e) => {
+              store.removeItem('ceramic-session');
+              store.removeItem('lit-auth-signature-' + address);
+              store.removeItem('lit-auth-signature');
+
+              reject(e);
+            })
           } else {
             reject('Getting auth method failed');
           }
@@ -216,10 +250,46 @@ export default class Allostasis<
             await store.setItem('lit-auth-signature', _userAuthSig);
           }
 
-          await this.ceramic.setDID(session.did);
-          this.composeClient.setDID(session.did);
+          this.ethersProvider.send("eth_requestAccounts", []).then(async () => {
+            await this.ceramic.setDID(session.did);
+            this.composeClient.setDID(session.did);
 
-          resolve({ did: session.did.id, address: address ?? '' });
+            this.ethersSigner = this.ethersProvider.getSigner();
+            this.ethersAddress = address;
+
+            console.log('Allostasis', 'Getting user')
+
+            const gotUser = await PushAPI.user.get({ account: this.ethersAddress, env: ENV.STAGING });
+
+            console.log('Allostasis', gotUser)
+
+            if (gotUser) {
+              this.chatUser = gotUser;
+            } else {
+              const createUser = await PushAPI.user.create({ account: this.ethersAddress, env: ENV.STAGING });
+
+              console.log('Allostasis', 'Creating user')
+              console.log('Allostasis', createUser)
+
+              this.chatUser = createUser;
+            }
+
+            this.pvtKey = await PushAPI.chat.decryptPGPKey({
+              encryptedPGPPrivateKey: (this.chatUser).encryptedPrivateKey,
+              account: this.ethersAddress,
+              signer: this.ethersSigner,
+              env: ENV.STAGING,
+              toUpgrade: true,
+            });
+
+            resolve({ did: session.did.id, address: address ?? '' });
+          }).catch((e) => {
+            store.removeItem('ceramic-session');
+            store.removeItem('lit-auth-signature-' + address);
+            store.removeItem('lit-auth-signature');
+
+            reject(e);
+          })
         } catch (e) {
           reject(e);
         }
@@ -313,6 +383,39 @@ export default class Allostasis<
                     greeniaProfileId:
                       createGreenia.data.createGreeniaProfile.document.id
                   } as GreeniaProfile);
+                }
+                break;
+              case 'embodia':
+                const createEmbodia = await this.composeClient.executeQuery<{
+                  createEmbodiaProfile: { document: EmbodiaProfile };
+                }>(`
+                  mutation {
+                    createEmbodiaProfile(input: {
+                      content:{
+                        profileID: "${create.data.createProfile.document.id}",
+                      }
+                    })
+                    {
+                      document {
+                        id
+                      }
+                    }
+                  }
+                `);
+
+                if (
+                    createEmbodia.errors != null &&
+                    createEmbodia.errors.length > 0
+                ) {
+                  reject(createEmbodia);
+                } else {
+                  resolve({
+                    ...create.data.createProfile.document,
+                    ...createEmbodia.data.createEmbodiaProfile.document,
+                    id: create.data.createProfile.document.id,
+                    embodiaProfileId:
+                    createEmbodia.data.createEmbodiaProfile.document.id
+                  } as EmbodiaProfile);
                 }
                 break;
               default:
@@ -500,6 +603,38 @@ export default class Allostasis<
                       } as GreeniaProfile);
                     } else {
                       reject(greeniaProfile);
+                    }
+                  }
+                  break;
+                case 'embodia':
+                  const embodiaProfile = await this.composeClient.executeQuery<{
+                    viewer: { embodiaProfile: EmbodiaProfile };
+                  }>(`
+                    query {
+                      viewer {
+                        embodiaProfile {
+                          id
+                        }
+                      }
+                    }
+                  `);
+
+                  if (
+                      embodiaProfile.errors != null &&
+                      embodiaProfile.errors.length > 0
+                  ) {
+                    reject(embodiaProfile);
+                  } else {
+                    if (embodiaProfile.data?.viewer?.embodiaProfile != null) {
+                      resolve({
+                        ...profileData,
+                        ...embodiaProfile.data?.viewer?.embodiaProfile,
+                        id: profileData.id,
+                        embodiaProfileId:
+                        embodiaProfile.data?.viewer?.embodiaProfile.id,
+                      } as EmbodiaProfile);
+                    } else {
+                      reject(embodiaProfile);
                     }
                   }
                   break;
@@ -698,6 +833,33 @@ export default class Allostasis<
               } as GreeniaProfile);
             }
             break;
+          case 'embodia':
+            const embodiaProfile = await this.composeClient.executeQuery<{
+              node: EmbodiaProfile;
+            }>(`
+              query {
+                node(id: "${id}") {
+                  ... on EmbodiaProfile {
+                    id
+                  }
+                }
+              }
+            `);
+
+            if (
+                embodiaProfile.errors != null &&
+                embodiaProfile.errors.length > 0
+            ) {
+              reject(embodiaProfile);
+            } else {
+              const { id, ...rest } = embodiaProfile.data.node;
+
+              resolve({
+                ...rest,
+                embodiaProfileId: embodiaProfile.data.node.id,
+              } as EmbodiaProfile);
+            }
+            break;
           default:
             reject('Wrong Community');
         }
@@ -709,7 +871,7 @@ export default class Allostasis<
     return new Promise((resolve, reject) => {
       (async () => {
         try {
-          resolve(this.chatUser.chat.list("CHATS"));
+          // resolve(this.chatUser.chat.list("CHATS"));
         } catch (e) {
           reject(e);
         }
@@ -719,24 +881,24 @@ export default class Allostasis<
 
   async createChat(recipient: string): Promise<MessageWithCID> {
     return new Promise((resolve, reject) => {
-      this.chatUser.chat.send(recipient, {
-        type: 'Text',
-        content: 'Hi! I want to chat with  you.'
-      }).then(res => {
-        resolve(res)
-      }).catch(err => {
-        reject(err)
-      })
+      // this.chatUser.chat.send(recipient, {
+      //   type: 'Text',
+      //   content: 'Hi! I want to chat with  you.'
+      // }).then(res => {
+      //   resolve(res)
+      // }).catch(err => {
+      //   reject(err)
+      // })
     });
   }
 
   async getChatHistory(recipient: string): Promise<IMessageIPFS[]> {
     return new Promise((resolve, reject) => {
-      this.chatUser.chat.history(recipient).then(res => {
-        resolve(res)
-      }).catch(err => {
-        reject(err)
-      })
+      // this.chatUser.chat.history(recipient).then(res => {
+      //   resolve(res)
+      // }).catch(err => {
+      //   reject(err)
+      // })
     });
   }
 
@@ -745,11 +907,11 @@ export default class Allostasis<
     message: Message,
   ): Promise<MessageWithCID> {
     return new Promise((resolve, reject) => {
-      return this.chatUser.chat.send(recipient, message).then(res => {
-        resolve(res)
-      }).catch(err => {
-        reject(err)
-      })
+      // return this.chatUser.chat.send(recipient, message).then(res => {
+      //   resolve(res)
+      // }).catch(err => {
+      //   reject(err)
+      // })
     });
   }
 
