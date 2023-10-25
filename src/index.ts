@@ -62,7 +62,8 @@ export default class Allostasis<
         this.provider = window.ethereum;
       } else {
         console.log(
-          'An ethereum provider is required to proceed with the connection to Ceramic.'
+            'Allostasis',
+            'An ethereum provider is required to proceed with the connection to Ceramic.'
         );
       }
     } else {
@@ -311,10 +312,32 @@ export default class Allostasis<
                 content: {
                   ${Object.keys(params)
                     .filter(
-                      (x) => x === 'name' || x === 'email' || x === 'avatar'
+                      (x) => 
+                          x === 'displayName' || 
+                          x === 'email' || 
+                          x === 'avatar' ||
+                          x === 'cover' ||
+                          x === 'bio' ||
+                          x === 'accountType' ||
+                          x === 'age' ||
+                          x === 'skills' ||
+                          x === 'gender' ||
+                          x === 'phoneNumber' ||
+                          x === 'address' ||
+                          x === 'socialLinks'
                     )
                     .map((key) => {
-                      return `${key}: "${params[key]}"`;
+                      if (key === 'skills') {
+                        return `${key}: [${params[key]
+                            .map((i) => `"${i}"`)
+                            .join(',')}]`;
+                      } else if (key === 'socialLinks') {
+                        return `${key}: [${params[key]
+                            .map((i) => `"${i}"`)
+                            .join(',')}]`;
+                      } else {
+                        return `${key}: "${params[key]}"`;
+                      }
                     })
                     .join(',')}
                 }
@@ -322,9 +345,18 @@ export default class Allostasis<
               {
                 document {
                   id
-                  name
+                  displayName
                   email
                   avatar
+                  cover
+                  bio
+                  accountType
+                  age
+                  skills
+                  gender
+                  phoneNumber
+                  address
+                  socialLinks
                 }
               }
             }
@@ -340,21 +372,15 @@ export default class Allostasis<
                 }>(`
                   mutation {
                     createGreeniaProfile(input: {
-                      content:{
+                      content: {
                         profileID: "${create.data.createProfile.document.id}",
                         ${Object.keys(params)
                           .filter(
                             (x) =>
-                              x === 'cover' || x === 'bio' || x === 'skills'
+                              x === 'greeniaRelatedProperty'
                           )
                           .map((key) => {
-                            if (key === 'skills') {
-                              return `${key}: [${params[key]
-                                .map((i) => `"${i}"`)
-                                .join(',')}]`;
-                            } else {
                               return `${key}: "${params[key]}"`;
-                            }
                           })
                           .join(',')}
                       }
@@ -362,9 +388,6 @@ export default class Allostasis<
                     {
                       document {
                         id
-                        cover
-                        bio
-                        skills
                       }
                     }
                   }
@@ -383,39 +406,6 @@ export default class Allostasis<
                     greeniaProfileId:
                       createGreenia.data.createGreeniaProfile.document.id
                   } as GreeniaProfile);
-                }
-                break;
-              case 'embodia':
-                const createEmbodia = await this.composeClient.executeQuery<{
-                  createEmbodiaProfile: { document: EmbodiaProfile };
-                }>(`
-                  mutation {
-                    createEmbodiaProfile(input: {
-                      content:{
-                        profileID: "${create.data.createProfile.document.id}",
-                      }
-                    })
-                    {
-                      document {
-                        id
-                      }
-                    }
-                  }
-                `);
-
-                if (
-                    createEmbodia.errors != null &&
-                    createEmbodia.errors.length > 0
-                ) {
-                  reject(createEmbodia);
-                } else {
-                  resolve({
-                    ...create.data.createProfile.document,
-                    ...createEmbodia.data.createEmbodiaProfile.document,
-                    id: create.data.createProfile.document.id,
-                    embodiaProfileId:
-                    createEmbodia.data.createEmbodiaProfile.document.id
-                  } as EmbodiaProfile);
                 }
                 break;
               default:
@@ -440,9 +430,63 @@ export default class Allostasis<
               viewer {
                 profile {
                   id
-                  name
+                  displayName
                   email
                   avatar
+                  cover
+                  bio
+                  accountType
+                  age
+                  skills
+                  gender
+                  phoneNumber
+                  address
+                  socialLinks
+                  experiences(last: 300) {
+                    edges {
+                      node {
+                        id
+                        city
+                        title
+                        company
+                        endDate
+                        startDate
+                        description
+                        isDeleted
+                      }
+                    }
+                  }
+                  educations(last: 300) {
+                    edges {
+                      node {
+                        id
+                        city
+                        title
+                        school
+                        endDate
+                        startDate
+                        description
+                        isDeleted
+                      }
+                    }
+                  }
+                  posts(last: 300) {
+                    edges {
+                      node {
+                        id
+                        body
+                        isDeleted
+                        isEncrypted
+                        tags
+                        attachment
+                        externalURL
+                        encryptedSymmetricKey
+                        unifiedAccessControlConditions
+                        commentsCount
+                        likesCount
+                      }
+                    }
+                  }
                   chats(last: 300) {
                     edges {
                       node {
@@ -505,6 +549,21 @@ export default class Allostasis<
                   profile.data.viewer.profile,
                   'receivedChats.edges',
                   []
+                ).map((i: { node: any }) => i.node),
+                educations: _.get(
+                    profile.data.viewer.profile,
+                    'educations.edges',
+                    []
+                ).map((i: { node: any }) => i.node),
+                experiences: _.get(
+                    profile.data.viewer.profile,
+                    'experiences.edges',
+                    []
+                ).map((i: { node: any }) => i.node),
+                posts: _.get(
+                    profile.data.viewer.profile,
+                    'posts.edges',
+                    []
                 ).map((i: { node: any }) => i.node)
               };
 
@@ -517,56 +576,6 @@ export default class Allostasis<
                       viewer {
                         greeniaProfile {
                           id
-                          bio
-                          cover
-                          skills
-                          experiences(last: 300) {
-                            edges {
-                              node {
-                                id
-                                city
-                                title
-                                company
-                                endDate
-                                startDate
-                                description
-                                isDeleted
-                              }
-                            }
-                          }
-                          educations(last: 300) {
-                            edges {
-                              node {
-                                id
-                                city
-                                title
-                                school
-                                endDate
-                                startDate
-                                description
-                                isDeleted
-                              }
-                            }
-                          }
-                          articles(last: 300) {
-                            edges {
-                              node {
-                                id
-                                body
-                                isDeleted
-                                isEncrypted
-                                price
-                                shortDescription
-                                tags
-                                thumbnail
-                                title
-                                encryptedSymmetricKey
-                                unifiedAccessControlConditions
-                                commentsCount
-                                likesCount
-                              }
-                            }
-                          }
                         }
                       }
                     }
@@ -585,56 +594,9 @@ export default class Allostasis<
                         id: profileData.id,
                         greeniaProfileId:
                           greeniaProfile.data?.viewer?.greeniaProfile.id,
-                        educations: _.get(
-                          greeniaProfile.data.viewer.greeniaProfile,
-                          'educations.edges',
-                          []
-                        ).map((i: { node: any }) => i.node),
-                        experiences: _.get(
-                          greeniaProfile.data.viewer.greeniaProfile,
-                          'experiences.edges',
-                          []
-                        ).map((i: { node: any }) => i.node),
-                        articles: _.get(
-                          greeniaProfile.data.viewer.greeniaProfile,
-                          'articles.edges',
-                          []
-                        ).map((i: { node: any }) => i.node)
                       } as GreeniaProfile);
                     } else {
                       reject(greeniaProfile);
-                    }
-                  }
-                  break;
-                case 'embodia':
-                  const embodiaProfile = await this.composeClient.executeQuery<{
-                    viewer: { embodiaProfile: EmbodiaProfile };
-                  }>(`
-                    query {
-                      viewer {
-                        embodiaProfile {
-                          id
-                        }
-                      }
-                    }
-                  `);
-
-                  if (
-                      embodiaProfile.errors != null &&
-                      embodiaProfile.errors.length > 0
-                  ) {
-                    reject(embodiaProfile);
-                  } else {
-                    if (embodiaProfile.data?.viewer?.embodiaProfile != null) {
-                      resolve({
-                        ...profileData,
-                        ...embodiaProfile.data?.viewer?.embodiaProfile,
-                        id: profileData.id,
-                        embodiaProfileId:
-                        embodiaProfile.data?.viewer?.embodiaProfile.id,
-                      } as EmbodiaProfile);
-                    } else {
-                      reject(embodiaProfile);
                     }
                   }
                   break;
@@ -665,9 +627,63 @@ export default class Allostasis<
             node(id: "${id}") {
               ... on Profile {
                 id
-                name
+                displayName
                 email
                 avatar
+                cover
+                bio
+                accountType
+                age
+                skills
+                gender
+                phoneNumber
+                address
+                socialLinks
+                experiences(last: 300) {
+                  edges {
+                    node {
+                      id
+                      city
+                      title
+                      company
+                      endDate
+                      startDate
+                      description
+                      isDeleted
+                    }
+                  }
+                }
+                educations(last: 300) {
+                  edges {
+                    node {
+                      id
+                      city
+                      title
+                      school
+                      endDate
+                      startDate
+                      description
+                      isDeleted
+                    }
+                  }
+                }
+                posts(last: 300) {
+                  edges {
+                    node {
+                      id
+                      body
+                      isDeleted
+                      isEncrypted
+                      tags
+                      attachment
+                      externalURL
+                      encryptedSymmetricKey
+                      unifiedAccessControlConditions
+                      commentsCount
+                      likesCount
+                    }
+                  }
+                }
                 chats(last: 300) {
                   edges {
                     node {
@@ -749,56 +765,7 @@ export default class Allostasis<
               query {
                 node(id: "${id}") {
                   ... on GreeniaProfile {
-                    cover
-                    bio
-                    skills
-                    experiences(last:300) {
-                      edges {
-                        node {
-                          id
-                          city
-                          title
-                          company
-                          endDate
-                          startDate
-                          description
-                          isDeleted
-                        }
-                      }
-                    }
-                    educations(last:300) {
-                      edges {
-                        node {
-                          id
-                          city
-                          title
-                          school
-                          endDate
-                          startDate
-                          description
-                          isDeleted
-                        }
-                      }
-                    }
-                    articles(last: 300) {
-                      edges {
-                        node {
-                          id
-                          body
-                          isDeleted
-                          isEncrypted
-                          price
-                          shortDescription
-                          tags
-                          thumbnail
-                          title
-                          encryptedSymmetricKey
-                          unifiedAccessControlConditions
-                          commentsCount
-                          likesCount
-                        }
-                      }
-                    }
+                    id
                   }
                 }
               }
@@ -815,49 +782,7 @@ export default class Allostasis<
               resolve({
                 ...rest,
                 greeniaProfileId: greeniaProfile.data.node.id,
-                educations: _.get(
-                  greeniaProfile.data.node,
-                  'educations.edges',
-                  []
-                ).map((i: { node: any }) => i.node),
-                experiences: _.get(
-                  greeniaProfile.data.node,
-                  'experiences.edges',
-                  []
-                ).map((i: { node: any }) => i.node),
-                articles: _.get(
-                  greeniaProfile.data.node,
-                  'articles.edges',
-                  []
-                ).map((i: { node: any }) => i.node)
               } as GreeniaProfile);
-            }
-            break;
-          case 'embodia':
-            const embodiaProfile = await this.composeClient.executeQuery<{
-              node: EmbodiaProfile;
-            }>(`
-              query {
-                node(id: "${id}") {
-                  ... on EmbodiaProfile {
-                    id
-                  }
-                }
-              }
-            `);
-
-            if (
-                embodiaProfile.errors != null &&
-                embodiaProfile.errors.length > 0
-            ) {
-              reject(embodiaProfile);
-            } else {
-              const { id, ...rest } = embodiaProfile.data.node;
-
-              resolve({
-                ...rest,
-                embodiaProfileId: embodiaProfile.data.node.id,
-              } as EmbodiaProfile);
             }
             break;
           default:

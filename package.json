@@ -1,6 +1,6 @@
 {
   "name": "allostasis-js-sdk",
-  "version": "1.0.32",
+  "version": "1.0.33",
   "description": "Allostasis data management",
   "main": "index.js",
   "scripts": {
