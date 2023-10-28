@@ -2,59 +2,78 @@
 export const definition = {
   models: {
     Profile: {
-      id: 'kjzl6hvfrbw6c54idp7x7vng2cq9lcdpvs3akepphr0r697fpiuytvwyzy98cv6',
+      id: 'kjzl6hvfrbw6c771ktevcpei7r6e7f2eob33rpb6z1fkwjj76muptaw2t76ah20',
       accountRelation: { type: 'single' }
     },
     Chat: {
-      id: 'kjzl6hvfrbw6ca2ht7q6ejvzb193c6cv6p0xdt5usgwvwbfywswir49nuc1mnci',
+      id: 'kjzl6hvfrbw6c5w5ov3a5s0prf0s6o075j9ioichqzjtteoq8g6a5p5l9dbhvoq',
       accountRelation: { type: 'list' }
     },
     ChatMessage: {
-      id: 'kjzl6hvfrbw6c91nm7mdlnbe8fvge1g9zdjnsfvt9inwip4jsck0mn8mcxq4d6i',
+      id: 'kjzl6hvfrbw6c54q61x0sohb3rjjydbk8r6gews8h8adczizxvnlaylx91gopcy',
       accountRelation: { type: 'list' }
     },
-    GreeniaProfile: {
-      id: 'kjzl6hvfrbw6c81xqg432mn3y4am6674c0zhg1aw6sh3d074k8ftsqfv2wez86l',
-      accountRelation: { type: 'single' }
-    },
-    GreeniaArticle: {
-      id: 'kjzl6hvfrbw6c62zrfmgijr75esorupch0fnvc8trg94j42nzraeeusc3m88n8c',
+    Post: {
+      id: 'kjzl6hvfrbw6c775u41jzarct5obhqynyhbg7x17dvcenbyo1n16i6xpoli9xr5',
       accountRelation: { type: 'list' }
     },
-    GreeniaArticleComment: {
-      id: 'kjzl6hvfrbw6c7vu7cp68kzxeh00e2zwnizkdx7akgslp09u6glbusncz2u2jm7',
+    Follow: {
+      id: 'kjzl6hvfrbw6c5xzjusc07y5iwed7vq28jfchveishrllni4nm963oqzmpl4fac',
       accountRelation: { type: 'list' }
     },
-    GreeniaArticleLike: {
-      id: 'kjzl6hvfrbw6c92lf8tp76xtqd40dnhsj2cavs2uqc460no7ktiss96xluehbnr',
+    Education: {
+      id: 'kjzl6hvfrbw6cafzur1jlgvr5u0qr77mx3nyhccywklcryjnwu8s7uny1u98e7e',
       accountRelation: { type: 'list' }
     },
-    GreeniaArticlePermissionRequest: {
-      id: 'kjzl6hvfrbw6c7tucbp3scc15j3a0zx4w7n56hfsfyqiuufmvya1uzdg2k4zm64',
+    Asset: {
+      id: 'kjzl6hvfrbw6c54odeb51k8ttc0mcff2pglrgc0e1kfn0fxy6pcz8sij6t4c0af',
       accountRelation: { type: 'list' }
     },
-    GreeniaArticlePermissionRequestStatus: {
-      id: 'kjzl6hvfrbw6c6zsxhrz1uq3z6j4mfsi05ymx2l176bctk74wa7ygbi6ule7rzr',
+    Experience: {
+      id: 'kjzl6hvfrbw6cbad3v6gbe4zqjur4w9225dfk0w7m5goxag0azvhtn375z18h8s',
       accountRelation: { type: 'list' }
     },
-    GreeniaFollow: {
-      id: 'kjzl6hvfrbw6c7ot9q7vo4117xzfb4ufx61cr6372f8av7vm5e0x7cdj5n4apxm',
+    PostComment: {
+      id: 'kjzl6hvfrbw6caiwlhppnmmngcz89f3hu353j6qgv5xwx66cobvb9prbtpgahw2',
       accountRelation: { type: 'list' }
     },
-    GreeniaProfileEducation: {
-      id: 'kjzl6hvfrbw6c7bpg7zk1m29l3bvbud7v3jj64c0otaivw1aznc3gl0ggfpzydg',
-      accountRelation: { type: 'list' }
-    },
-    GreeniaProfileExperience: {
-      id: 'kjzl6hvfrbw6c7rjcz1b8qlrzmyf52zbddm53okcpururos8l3di0zw90d21ckq',
+    PostLike: {
+      id: 'kjzl6hvfrbw6c9jkn1cuo2gn6jctspsv6xt7o8pft7x3x3l2damair7gtkddehr',
       accountRelation: { type: 'list' }
     }
   },
   objects: {
     Profile: {
-      name: { type: 'string', required: false },
+      age: { type: 'integer', required: false },
+      bio: { type: 'string', required: false },
+      cover: { type: 'string', required: false },
       email: { type: 'string', required: false },
       avatar: { type: 'string', required: false },
+      gender: {
+        type: 'reference',
+        refType: 'enum',
+        refName: 'ProfileGender',
+        required: false
+      },
+      skills: {
+        type: 'list',
+        required: false,
+        item: { type: 'string', required: false }
+      },
+      address: { type: 'string', required: false },
+      accountType: {
+        type: 'reference',
+        refType: 'enum',
+        refName: 'ProfileAccountType',
+        required: false
+      },
+      displayName: { type: 'string', required: false },
+      phoneNumber: { type: 'string', required: false },
+      socialLinks: {
+        type: 'list',
+        required: false,
+        item: { type: 'string', required: false }
+      },
       creator: { type: 'view', viewType: 'documentAccount' },
       chats: {
         type: 'view',
@@ -62,7 +81,7 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6ca2ht7q6ejvzb193c6cv6p0xdt5usgwvwbfywswir49nuc1mnci',
+            'kjzl6hvfrbw6c5w5ov3a5s0prf0s6o075j9ioichqzjtteoq8g6a5p5l9dbhvoq',
           property: 'profileID'
         }
       },
@@ -72,7 +91,7 @@ export const definition = {
         relation: {
           source: 'queryCount',
           model:
-            'kjzl6hvfrbw6ca2ht7q6ejvzb193c6cv6p0xdt5usgwvwbfywswir49nuc1mnci',
+            'kjzl6hvfrbw6c5w5ov3a5s0prf0s6o075j9ioichqzjtteoq8g6a5p5l9dbhvoq',
           property: 'profileID'
         }
       },
@@ -82,7 +101,7 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6ca2ht7q6ejvzb193c6cv6p0xdt5usgwvwbfywswir49nuc1mnci',
+            'kjzl6hvfrbw6c5w5ov3a5s0prf0s6o075j9ioichqzjtteoq8g6a5p5l9dbhvoq',
           property: 'recipientProfileID'
         }
       },
@@ -92,8 +111,108 @@ export const definition = {
         relation: {
           source: 'queryCount',
           model:
-            'kjzl6hvfrbw6ca2ht7q6ejvzb193c6cv6p0xdt5usgwvwbfywswir49nuc1mnci',
+            'kjzl6hvfrbw6c5w5ov3a5s0prf0s6o075j9ioichqzjtteoq8g6a5p5l9dbhvoq',
           property: 'recipientProfileID'
+        }
+      },
+      experiences: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryConnection',
+          model:
+            'kjzl6hvfrbw6cbad3v6gbe4zqjur4w9225dfk0w7m5goxag0azvhtn375z18h8s',
+          property: 'profileID'
+        }
+      },
+      educations: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryConnection',
+          model:
+            'kjzl6hvfrbw6cafzur1jlgvr5u0qr77mx3nyhccywklcryjnwu8s7uny1u98e7e',
+          property: 'profileID'
+        }
+      },
+      followings: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryConnection',
+          model:
+            'kjzl6hvfrbw6c5xzjusc07y5iwed7vq28jfchveishrllni4nm963oqzmpl4fac',
+          property: 'profileID'
+        }
+      },
+      followingsCount: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryCount',
+          model:
+            'kjzl6hvfrbw6c5xzjusc07y5iwed7vq28jfchveishrllni4nm963oqzmpl4fac',
+          property: 'profileID'
+        }
+      },
+      followers: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryConnection',
+          model:
+            'kjzl6hvfrbw6c5xzjusc07y5iwed7vq28jfchveishrllni4nm963oqzmpl4fac',
+          property: 'targetProfileID'
+        }
+      },
+      followersCount: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryCount',
+          model:
+            'kjzl6hvfrbw6c5xzjusc07y5iwed7vq28jfchveishrllni4nm963oqzmpl4fac',
+          property: 'targetProfileID'
+        }
+      },
+      posts: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryConnection',
+          model:
+            'kjzl6hvfrbw6c775u41jzarct5obhqynyhbg7x17dvcenbyo1n16i6xpoli9xr5',
+          property: 'profileID'
+        }
+      },
+      postsCount: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryCount',
+          model:
+            'kjzl6hvfrbw6c775u41jzarct5obhqynyhbg7x17dvcenbyo1n16i6xpoli9xr5',
+          property: 'profileID'
+        }
+      },
+      assets: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryConnection',
+          model:
+            'kjzl6hvfrbw6c54odeb51k8ttc0mcff2pglrgc0e1kfn0fxy6pcz8sij6t4c0af',
+          property: 'profileID'
+        }
+      },
+      assetsCount: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryCount',
+          model:
+            'kjzl6hvfrbw6c54odeb51k8ttc0mcff2pglrgc0e1kfn0fxy6pcz8sij6t4c0af',
+          property: 'profileID'
         }
       }
     },
@@ -110,7 +229,7 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c54idp7x7vng2cq9lcdpvs3akepphr0r697fpiuytvwyzy98cv6',
+            'kjzl6hvfrbw6c771ktevcpei7r6e7f2eob33rpb6z1fkwjj76muptaw2t76ah20',
           property: 'profileID'
         }
       },
@@ -120,7 +239,7 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c54idp7x7vng2cq9lcdpvs3akepphr0r697fpiuytvwyzy98cv6',
+            'kjzl6hvfrbw6c771ktevcpei7r6e7f2eob33rpb6z1fkwjj76muptaw2t76ah20',
           property: 'recipientProfileID'
         }
       },
@@ -130,7 +249,7 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6c91nm7mdlnbe8fvge1g9zdjnsfvt9inwip4jsck0mn8mcxq4d6i',
+            'kjzl6hvfrbw6c54q61x0sohb3rjjydbk8r6gews8h8adczizxvnlaylx91gopcy',
           property: 'chatID'
         }
       },
@@ -140,7 +259,7 @@ export const definition = {
         relation: {
           source: 'queryCount',
           model:
-            'kjzl6hvfrbw6c91nm7mdlnbe8fvge1g9zdjnsfvt9inwip4jsck0mn8mcxq4d6i',
+            'kjzl6hvfrbw6c54q61x0sohb3rjjydbk8r6gews8h8adczizxvnlaylx91gopcy',
           property: 'chatID'
         }
       }
@@ -159,7 +278,7 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6ca2ht7q6ejvzb193c6cv6p0xdt5usgwvwbfywswir49nuc1mnci',
+            'kjzl6hvfrbw6c5w5ov3a5s0prf0s6o075j9ioichqzjtteoq8g6a5p5l9dbhvoq',
           property: 'chatID'
         }
       },
@@ -170,128 +289,34 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c54idp7x7vng2cq9lcdpvs3akepphr0r697fpiuytvwyzy98cv6',
+            'kjzl6hvfrbw6c771ktevcpei7r6e7f2eob33rpb6z1fkwjj76muptaw2t76ah20',
           property: 'profileID'
         }
       }
     },
-    GreeniaProfile: {
-      bio: { type: 'string', required: false },
-      cover: { type: 'string', required: false },
-      skills: {
-        type: 'list',
-        required: false,
-        item: { type: 'string', required: false }
-      },
-      profileID: { type: 'string', required: true },
-      creator: { type: 'view', viewType: 'documentAccount' },
-      experiences: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryConnection',
-          model:
-            'kjzl6hvfrbw6c7rjcz1b8qlrzmyf52zbddm53okcpururos8l3di0zw90d21ckq',
-          property: 'greeniaProfileID'
-        }
-      },
-      educations: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryConnection',
-          model:
-            'kjzl6hvfrbw6c7bpg7zk1m29l3bvbud7v3jj64c0otaivw1aznc3gl0ggfpzydg',
-          property: 'greeniaProfileID'
-        }
-      },
-      followings: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryConnection',
-          model:
-            'kjzl6hvfrbw6c7ot9q7vo4117xzfb4ufx61cr6372f8av7vm5e0x7cdj5n4apxm',
-          property: 'greeniaProfileID'
-        }
-      },
-      followingsCount: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryCount',
-          model:
-            'kjzl6hvfrbw6c7ot9q7vo4117xzfb4ufx61cr6372f8av7vm5e0x7cdj5n4apxm',
-          property: 'greeniaProfileID'
-        }
-      },
-      followers: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryConnection',
-          model:
-            'kjzl6hvfrbw6c7ot9q7vo4117xzfb4ufx61cr6372f8av7vm5e0x7cdj5n4apxm',
-          property: 'targetGreeniaProfileID'
-        }
-      },
-      followersCount: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryCount',
-          model:
-            'kjzl6hvfrbw6c7ot9q7vo4117xzfb4ufx61cr6372f8av7vm5e0x7cdj5n4apxm',
-          property: 'targetGreeniaProfileID'
-        }
-      },
-      articles: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryConnection',
-          model:
-            'kjzl6hvfrbw6c62zrfmgijr75esorupch0fnvc8trg94j42nzraeeusc3m88n8c',
-          property: 'greeniaProfileID'
-        }
-      },
-      articlesCount: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryCount',
-          model:
-            'kjzl6hvfrbw6c62zrfmgijr75esorupch0fnvc8trg94j42nzraeeusc3m88n8c',
-          property: 'greeniaProfileID'
-        }
-      }
-    },
-    GreeniaArticle: {
+    Post: {
       body: { type: 'string', required: true },
       tags: {
         type: 'list',
         required: false,
         item: { type: 'string', required: false }
       },
-      price: { type: 'float', required: true },
-      title: { type: 'string', required: true },
-      createdAt: { type: 'datetime', required: true },
       isDeleted: { type: 'boolean', required: true },
-      thumbnail: { type: 'string', required: false },
+      profileID: { type: 'streamid', required: true },
+      attachment: { type: 'string', required: false },
+      externalURL: { type: 'string', required: false },
       isEncrypted: { type: 'boolean', required: true },
-      greeniaProfileID: { type: 'streamid', required: true },
-      shortDescription: { type: 'string', required: true },
       encryptedSymmetricKey: { type: 'string', required: false },
       unifiedAccessControlConditions: { type: 'string', required: false },
       creator: { type: 'view', viewType: 'documentAccount' },
-      greeniaProfile: {
+      profile: {
         type: 'view',
         viewType: 'relation',
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c81xqg432mn3y4am6674c0zhg1aw6sh3d074k8ftsqfv2wez86l',
-          property: 'greeniaProfileID'
+            'kjzl6hvfrbw6c771ktevcpei7r6e7f2eob33rpb6z1fkwjj76muptaw2t76ah20',
+          property: 'profileID'
         }
       },
       comments: {
@@ -300,8 +325,8 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6c7vu7cp68kzxeh00e2zwnizkdx7akgslp09u6glbusncz2u2jm7',
-          property: 'articleID'
+            'kjzl6hvfrbw6caiwlhppnmmngcz89f3hu353j6qgv5xwx66cobvb9prbtpgahw2',
+          property: 'postID'
         }
       },
       commentsCount: {
@@ -310,8 +335,8 @@ export const definition = {
         relation: {
           source: 'queryCount',
           model:
-            'kjzl6hvfrbw6c7vu7cp68kzxeh00e2zwnizkdx7akgslp09u6glbusncz2u2jm7',
-          property: 'articleID'
+            'kjzl6hvfrbw6caiwlhppnmmngcz89f3hu353j6qgv5xwx66cobvb9prbtpgahw2',
+          property: 'postID'
         }
       },
       likes: {
@@ -320,8 +345,8 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6c92lf8tp76xtqd40dnhsj2cavs2uqc460no7ktiss96xluehbnr',
-          property: 'articleID'
+            'kjzl6hvfrbw6c9jkn1cuo2gn6jctspsv6xt7o8pft7x3x3l2damair7gtkddehr',
+          property: 'postID'
         }
       },
       likesCount: {
@@ -330,224 +355,173 @@ export const definition = {
         relation: {
           source: 'queryCount',
           model:
-            'kjzl6hvfrbw6c92lf8tp76xtqd40dnhsj2cavs2uqc460no7ktiss96xluehbnr',
-          property: 'articleID'
-        }
-      },
-      permissionRequests: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryConnection',
-          model:
-            'kjzl6hvfrbw6c7tucbp3scc15j3a0zx4w7n56hfsfyqiuufmvya1uzdg2k4zm64',
-          property: 'articleID'
+            'kjzl6hvfrbw6c9jkn1cuo2gn6jctspsv6xt7o8pft7x3x3l2damair7gtkddehr',
+          property: 'postID'
         }
       }
     },
-    GreeniaArticleComment: {
-      content: { type: 'string', required: true },
-      articleID: { type: 'streamid', required: true },
+    Follow: {
       isDeleted: { type: 'boolean', required: true },
-      replyingToID: { type: 'streamid', required: false },
-      greeniaProfileID: { type: 'streamid', required: true },
-      article: {
+      profileID: { type: 'streamid', required: true },
+      targetProfileID: { type: 'streamid', required: true },
+      creator: { type: 'view', viewType: 'documentAccount' },
+      profile: {
         type: 'view',
         viewType: 'relation',
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c62zrfmgijr75esorupch0fnvc8trg94j42nzraeeusc3m88n8c',
-          property: 'articleID'
+            'kjzl6hvfrbw6c771ktevcpei7r6e7f2eob33rpb6z1fkwjj76muptaw2t76ah20',
+          property: 'profileID'
         }
       },
-      creator: { type: 'view', viewType: 'documentAccount' },
-      greeniaProfile: {
+      targetProfile: {
         type: 'view',
         viewType: 'relation',
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c81xqg432mn3y4am6674c0zhg1aw6sh3d074k8ftsqfv2wez86l',
-          property: 'greeniaProfileID'
+            'kjzl6hvfrbw6c771ktevcpei7r6e7f2eob33rpb6z1fkwjj76muptaw2t76ah20',
+          property: 'targetProfileID'
         }
       }
     },
-    GreeniaArticleLike: {
-      articleID: { type: 'streamid', required: true },
-      isDeleted: { type: 'boolean', required: true },
-      greeniaProfileID: { type: 'streamid', required: true },
-      article: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'document',
-          model:
-            'kjzl6hvfrbw6c62zrfmgijr75esorupch0fnvc8trg94j42nzraeeusc3m88n8c',
-          property: 'articleID'
-        }
-      },
-      creator: { type: 'view', viewType: 'documentAccount' },
-      greeniaProfile: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'document',
-          model:
-            'kjzl6hvfrbw6c81xqg432mn3y4am6674c0zhg1aw6sh3d074k8ftsqfv2wez86l',
-          property: 'greeniaProfileID'
-        }
-      }
-    },
-    GreeniaArticlePermissionRequest: {
-      content: { type: 'string', required: false },
-      articleID: { type: 'streamid', required: true },
-      isDeleted: { type: 'boolean', required: true },
-      greeniaProfileID: { type: 'streamid', required: true },
-      article: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'document',
-          model:
-            'kjzl6hvfrbw6c62zrfmgijr75esorupch0fnvc8trg94j42nzraeeusc3m88n8c',
-          property: 'articleID'
-        }
-      },
-      creator: { type: 'view', viewType: 'documentAccount' },
-      greeniaProfile: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'document',
-          model:
-            'kjzl6hvfrbw6c81xqg432mn3y4am6674c0zhg1aw6sh3d074k8ftsqfv2wez86l',
-          property: 'greeniaProfileID'
-        }
-      },
-      status: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryConnection',
-          model:
-            'kjzl6hvfrbw6c6zsxhrz1uq3z6j4mfsi05ymx2l176bctk74wa7ygbi6ule7rzr',
-          property: 'articlePermissionRequestID'
-        }
-      }
-    },
-    GreeniaArticlePermissionRequestStatus: {
-      status: { type: 'boolean', required: true },
-      articlePermissionRequestID: { type: 'streamid', required: true },
-      creator: { type: 'view', viewType: 'documentAccount' },
-      articlePermissionRequest: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'document',
-          model:
-            'kjzl6hvfrbw6c7tucbp3scc15j3a0zx4w7n56hfsfyqiuufmvya1uzdg2k4zm64',
-          property: 'articlePermissionRequestID'
-        }
-      }
-    },
-    GreeniaFollow: {
-      isDeleted: { type: 'boolean', required: true },
-      greeniaProfileID: { type: 'streamid', required: true },
-      targetGreeniaProfileID: { type: 'streamid', required: true },
-      creator: { type: 'view', viewType: 'documentAccount' },
-      greeniaProfile: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'document',
-          model:
-            'kjzl6hvfrbw6c81xqg432mn3y4am6674c0zhg1aw6sh3d074k8ftsqfv2wez86l',
-          property: 'greeniaProfileID'
-        }
-      },
-      targetGreeniaProfile: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'document',
-          model:
-            'kjzl6hvfrbw6c81xqg432mn3y4am6674c0zhg1aw6sh3d074k8ftsqfv2wez86l',
-          property: 'targetGreeniaProfileID'
-        }
-      }
-    },
-    GreeniaProfileEducation: {
+    Education: {
       city: { type: 'string', required: true },
       title: { type: 'string', required: true },
       school: { type: 'string', required: true },
       endDate: { type: 'date', required: false },
       isDeleted: { type: 'boolean', required: true },
+      profileID: { type: 'streamid', required: true },
       startDate: { type: 'date', required: true },
       description: { type: 'string', required: true },
-      greeniaProfileID: { type: 'streamid', required: true },
       creator: { type: 'view', viewType: 'documentAccount' },
-      greeniaProfile: {
+      profile: {
         type: 'view',
         viewType: 'relation',
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c81xqg432mn3y4am6674c0zhg1aw6sh3d074k8ftsqfv2wez86l',
-          property: 'greeniaProfileID'
+            'kjzl6hvfrbw6c771ktevcpei7r6e7f2eob33rpb6z1fkwjj76muptaw2t76ah20',
+          property: 'profileID'
         }
       }
     },
-    GreeniaProfileExperience: {
+    Asset: {
+      tags: {
+        type: 'list',
+        required: false,
+        item: { type: 'string', required: false }
+      },
+      image: { type: 'string', required: false },
+      title: { type: 'string', required: true },
+      isDeleted: { type: 'boolean', required: true },
+      profileID: { type: 'streamid', required: true },
+      description: { type: 'string', required: true },
+      externalURL: { type: 'string', required: false },
+      animationURL: { type: 'string', required: false },
+      creator: { type: 'view', viewType: 'documentAccount' },
+      profile: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'document',
+          model:
+            'kjzl6hvfrbw6c771ktevcpei7r6e7f2eob33rpb6z1fkwjj76muptaw2t76ah20',
+          property: 'profileID'
+        }
+      }
+    },
+    Experience: {
       city: { type: 'string', required: true },
       title: { type: 'string', required: true },
       company: { type: 'string', required: true },
       endDate: { type: 'date', required: false },
       isDeleted: { type: 'boolean', required: true },
+      profileID: { type: 'streamid', required: true },
       startDate: { type: 'date', required: true },
       description: { type: 'string', required: true },
-      greeniaProfileID: { type: 'streamid', required: true },
       creator: { type: 'view', viewType: 'documentAccount' },
-      greeniaProfile: {
+      profile: {
         type: 'view',
         viewType: 'relation',
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c81xqg432mn3y4am6674c0zhg1aw6sh3d074k8ftsqfv2wez86l',
-          property: 'greeniaProfileID'
+            'kjzl6hvfrbw6c771ktevcpei7r6e7f2eob33rpb6z1fkwjj76muptaw2t76ah20',
+          property: 'profileID'
+        }
+      }
+    },
+    PostComment: {
+      postID: { type: 'streamid', required: true },
+      content: { type: 'string', required: true },
+      isDeleted: { type: 'boolean', required: true },
+      profileID: { type: 'streamid', required: true },
+      replyingToID: { type: 'streamid', required: false },
+      post: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'document',
+          model:
+            'kjzl6hvfrbw6c775u41jzarct5obhqynyhbg7x17dvcenbyo1n16i6xpoli9xr5',
+          property: 'postID'
+        }
+      },
+      creator: { type: 'view', viewType: 'documentAccount' },
+      profile: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'document',
+          model:
+            'kjzl6hvfrbw6c771ktevcpei7r6e7f2eob33rpb6z1fkwjj76muptaw2t76ah20',
+          property: 'profileID'
+        }
+      }
+    },
+    PostLike: {
+      postID: { type: 'streamid', required: true },
+      isDeleted: { type: 'boolean', required: true },
+      profileID: { type: 'streamid', required: true },
+      post: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'document',
+          model:
+            'kjzl6hvfrbw6c775u41jzarct5obhqynyhbg7x17dvcenbyo1n16i6xpoli9xr5',
+          property: 'postID'
+        }
+      },
+      creator: { type: 'view', viewType: 'documentAccount' },
+      profile: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'document',
+          model:
+            'kjzl6hvfrbw6c771ktevcpei7r6e7f2eob33rpb6z1fkwjj76muptaw2t76ah20',
+          property: 'profileID'
         }
       }
     }
   },
-  enums: {},
+  enums: {
+    ProfileGender: ['MALE', 'FEMALE', 'OTHER'],
+    ProfileAccountType: ['PERSONAL', 'ENTERPRISE']
+  },
   accountData: {
     profile: { type: 'node', name: 'Profile' },
     chatList: { type: 'connection', name: 'Chat' },
     chatMessageList: { type: 'connection', name: 'ChatMessage' },
-    greeniaProfile: { type: 'node', name: 'GreeniaProfile' },
-    greeniaArticleList: { type: 'connection', name: 'GreeniaArticle' },
-    greeniaArticleCommentList: {
-      type: 'connection',
-      name: 'GreeniaArticleComment'
-    },
-    greeniaArticleLikeList: { type: 'connection', name: 'GreeniaArticleLike' },
-    greeniaArticlePermissionRequestList: {
-      type: 'connection',
-      name: 'GreeniaArticlePermissionRequest'
-    },
-    greeniaArticlePermissionRequestStatusList: {
-      type: 'connection',
-      name: 'GreeniaArticlePermissionRequestStatus'
-    },
-    greeniaFollowList: { type: 'connection', name: 'GreeniaFollow' },
-    greeniaProfileEducationList: {
-      type: 'connection',
-      name: 'GreeniaProfileEducation'
-    },
-    greeniaProfileExperienceList: {
-      type: 'connection',
-      name: 'GreeniaProfileExperience'
-    }
+    postList: { type: 'connection', name: 'Post' },
+    followList: { type: 'connection', name: 'Follow' },
+    educationList: { type: 'connection', name: 'Education' },
+    assetList: { type: 'connection', name: 'Asset' },
+    experienceList: { type: 'connection', name: 'Experience' },
+    postCommentList: { type: 'connection', name: 'PostComment' },
+    postLikeList: { type: 'connection', name: 'PostLike' }
   }
 };
