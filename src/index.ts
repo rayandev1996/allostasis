@@ -5,30 +5,42 @@ import {
   ChatMessage,
   Communities,
   Profile,
-  ProfileTypeBasedOnCommunities
+  ProfileTypeBasedOnCommunities,
+  Post, PostLike, PostComment
 } from './types/allostasis';
-import {GreeniaProfile} from './types/greenia';
-import {CeramicClient} from '@ceramicnetwork/http-client';
-import {ComposeClient} from '@composedb/client';
+import { GreeniaProfile } from './types/greenia';
+import { CeramicClient } from '@ceramicnetwork/http-client';
+import { ComposeClient } from '@composedb/client';
 import * as LitJsSdk from '@lit-protocol/lit-node-client';
-import {LitNodeClient} from '@lit-protocol/lit-node-client';
-import {definition} from './constants/definition';
-import {RuntimeCompositeDefinition} from '@composedb/types';
-import {Store} from './utils/store';
-import {getAddressFromDid, getAuthMethod} from './utils/did-provider';
-import {DIDSession} from 'did-session';
-import {Web3Provider} from '@ethersproject/providers';
-import {ethConnect} from '@lit-protocol/auth-browser';
+import { LitNodeClient } from '@lit-protocol/lit-node-client';
+import { definition } from './constants/definition';
+import { RuntimeCompositeDefinition } from '@composedb/types';
+import { Store } from './utils/store';
+import { getAddressFromDid, getAuthMethod } from './utils/did-provider';
+import { DIDSession } from 'did-session';
+import { Web3Provider } from '@ethersproject/providers';
+import { ethConnect } from '@lit-protocol/auth-browser';
 import _ from 'lodash';
 import dayjs from 'dayjs';
-import {chatMessageAccessControlGenerator, decodeB64, encryptString, getAuthSig} from './utils/lit';
-import {create as createIPFS, IPFSHTTPClient} from 'kubo-rpc-client';
-import {MyBlobToBuffer} from './utils/file';
-import {ethers} from "ethers";
+import {
+  chatMessageAccessControlGenerator,
+  decodeB64,
+  encryptString,
+  getAuthSig
+} from './utils/lit';
+import { create as createIPFS, IPFSHTTPClient } from 'kubo-rpc-client';
+import { MyBlobToBuffer } from './utils/file';
+import { ethers } from 'ethers';
 import * as PushAPI from '@pushprotocol/restapi';
-import {IFeeds, IMessageIPFS, IUser, Message, MessageWithCID, SignerType} from '@pushprotocol/restapi';
-import {ENV} from "@pushprotocol/restapi/src/lib/constants";
-import {EmbodiaProfile} from "./types/embodia";
+import {
+  IFeeds,
+  IMessageIPFS,
+  IUser,
+  Message,
+  MessageWithCID,
+  SignerType
+} from '@pushprotocol/restapi';
+import { ENV } from '@pushprotocol/restapi/src/lib/constants';
 
 export default class Allostasis<
   TCommunity extends keyof Communities = keyof Communities
@@ -62,8 +74,8 @@ export default class Allostasis<
         this.provider = window.ethereum;
       } else {
         console.log(
-            'Allostasis',
-            'An ethereum provider is required to proceed with the connection to Ceramic.'
+          'Allostasis',
+          'An ethereum provider is required to proceed with the connection to Ceramic.'
         );
       }
     } else {
@@ -158,46 +170,55 @@ export default class Allostasis<
               }
             }
 
-            this.ethersProvider.send("eth_requestAccounts", []).then(async () => {
-              await this.ceramic.setDID(session.did);
-              this.composeClient.setDID(session.did);
+            this.ethersProvider
+              .send('eth_requestAccounts', [])
+              .then(async () => {
+                await this.ceramic.setDID(session.did);
+                this.composeClient.setDID(session.did);
 
-              this.ethersSigner = this.ethersProvider.getSigner();
-              this.ethersAddress = address;
+                this.ethersSigner = this.ethersProvider.getSigner();
+                this.ethersAddress = address;
 
-              console.log('Allostasis', 'Getting user')
+                console.log('Allostasis', 'Getting user');
 
-              const gotUser = await PushAPI.user.get({ account: this.ethersAddress, env: ENV.STAGING });
+                const gotUser = await PushAPI.user.get({
+                  account: this.ethersAddress,
+                  env: ENV.STAGING
+                });
 
-              console.log('Allostasis', gotUser)
+                console.log('Allostasis', gotUser);
 
-              if (gotUser) {
-                this.chatUser = gotUser;
-              } else {
-                const createUser = await PushAPI.user.create({ account: this.ethersAddress, env: ENV.STAGING });
+                if (gotUser) {
+                  this.chatUser = gotUser;
+                } else {
+                  const createUser = await PushAPI.user.create({
+                    account: this.ethersAddress,
+                    env: ENV.STAGING
+                  });
 
-                console.log('Allostasis', 'Creating user')
-                console.log('Allostasis', createUser)
+                  console.log('Allostasis', 'Creating user');
+                  console.log('Allostasis', createUser);
 
-                this.chatUser = createUser;
-              }
+                  this.chatUser = createUser;
+                }
 
-              this.pvtKey = await PushAPI.chat.decryptPGPKey({
-                encryptedPGPPrivateKey: (this.chatUser).encryptedPrivateKey,
-                account: this.ethersAddress,
-                signer: this.ethersSigner,
-                env: ENV.STAGING,
-                toUpgrade: true,
+                this.pvtKey = await PushAPI.chat.decryptPGPKey({
+                  encryptedPGPPrivateKey: this.chatUser.encryptedPrivateKey,
+                  account: this.ethersAddress,
+                  signer: this.ethersSigner,
+                  env: ENV.STAGING,
+                  toUpgrade: true
+                });
+
+                resolve({ did: session.did.id, address: address ?? '' });
+              })
+              .catch((e) => {
+                store.removeItem('ceramic-session');
+                store.removeItem('lit-auth-signature-' + address);
+                store.removeItem('lit-auth-signature');
+
+                reject(e);
               });
-
-              resolve({ did: session.did.id, address: address ?? '' });
-            }).catch((e) => {
-              store.removeItem('ceramic-session');
-              store.removeItem('lit-auth-signature-' + address);
-              store.removeItem('lit-auth-signature');
-
-              reject(e);
-            })
           } else {
             reject('Getting auth method failed');
           }
@@ -251,46 +272,55 @@ export default class Allostasis<
             await store.setItem('lit-auth-signature', _userAuthSig);
           }
 
-          this.ethersProvider.send("eth_requestAccounts", []).then(async () => {
-            await this.ceramic.setDID(session.did);
-            this.composeClient.setDID(session.did);
+          this.ethersProvider
+            .send('eth_requestAccounts', [])
+            .then(async () => {
+              await this.ceramic.setDID(session.did);
+              this.composeClient.setDID(session.did);
 
-            this.ethersSigner = this.ethersProvider.getSigner();
-            this.ethersAddress = address;
+              this.ethersSigner = this.ethersProvider.getSigner();
+              this.ethersAddress = address;
 
-            console.log('Allostasis', 'Getting user')
+              console.log('Allostasis', 'Getting user');
 
-            const gotUser = await PushAPI.user.get({ account: this.ethersAddress, env: ENV.STAGING });
+              const gotUser = await PushAPI.user.get({
+                account: this.ethersAddress,
+                env: ENV.STAGING
+              });
 
-            console.log('Allostasis', gotUser)
+              console.log('Allostasis', gotUser);
 
-            if (gotUser) {
-              this.chatUser = gotUser;
-            } else {
-              const createUser = await PushAPI.user.create({ account: this.ethersAddress, env: ENV.STAGING });
+              if (gotUser) {
+                this.chatUser = gotUser;
+              } else {
+                const createUser = await PushAPI.user.create({
+                  account: this.ethersAddress,
+                  env: ENV.STAGING
+                });
 
-              console.log('Allostasis', 'Creating user')
-              console.log('Allostasis', createUser)
+                console.log('Allostasis', 'Creating user');
+                console.log('Allostasis', createUser);
 
-              this.chatUser = createUser;
-            }
+                this.chatUser = createUser;
+              }
 
-            this.pvtKey = await PushAPI.chat.decryptPGPKey({
-              encryptedPGPPrivateKey: (this.chatUser).encryptedPrivateKey,
-              account: this.ethersAddress,
-              signer: this.ethersSigner,
-              env: ENV.STAGING,
-              toUpgrade: true,
+              this.pvtKey = await PushAPI.chat.decryptPGPKey({
+                encryptedPGPPrivateKey: this.chatUser.encryptedPrivateKey,
+                account: this.ethersAddress,
+                signer: this.ethersSigner,
+                env: ENV.STAGING,
+                toUpgrade: true
+              });
+
+              resolve({ did: session.did.id, address: address ?? '' });
+            })
+            .catch((e) => {
+              store.removeItem('ceramic-session');
+              store.removeItem('lit-auth-signature-' + address);
+              store.removeItem('lit-auth-signature');
+
+              reject(e);
             });
-
-            resolve({ did: session.did.id, address: address ?? '' });
-          }).catch((e) => {
-            store.removeItem('ceramic-session');
-            store.removeItem('lit-auth-signature-' + address);
-            store.removeItem('lit-auth-signature');
-
-            reject(e);
-          })
         } catch (e) {
           reject(e);
         }
@@ -312,29 +342,29 @@ export default class Allostasis<
                 content: {
                   ${Object.keys(params)
                     .filter(
-                      (x) => 
-                          x === 'displayName' || 
-                          x === 'email' || 
-                          x === 'avatar' ||
-                          x === 'cover' ||
-                          x === 'bio' ||
-                          x === 'accountType' ||
-                          x === 'age' ||
-                          x === 'skills' ||
-                          x === 'gender' ||
-                          x === 'phoneNumber' ||
-                          x === 'address' ||
-                          x === 'socialLinks'
+                      (x) =>
+                        x === 'displayName' ||
+                        x === 'email' ||
+                        x === 'avatar' ||
+                        x === 'cover' ||
+                        x === 'bio' ||
+                        x === 'accountType' ||
+                        x === 'age' ||
+                        x === 'skills' ||
+                        x === 'gender' ||
+                        x === 'phoneNumber' ||
+                        x === 'address' ||
+                        x === 'socialLinks'
                     )
                     .map((key) => {
                       if (key === 'skills') {
                         return `${key}: [${params[key]
-                            .map((i) => `"${i}"`)
-                            .join(',')}]`;
+                          .map((i) => `"${i}"`)
+                          .join(',')}]`;
                       } else if (key === 'socialLinks') {
                         return `${key}: [${params[key]
-                            .map((i) => `"${i}"`)
-                            .join(',')}]`;
+                          .map((i) => `"${i}"`)
+                          .join(',')}]`;
                       } else {
                         return `${key}: "${params[key]}"`;
                       }
@@ -375,12 +405,9 @@ export default class Allostasis<
                       content: {
                         profileID: "${create.data.createProfile.document.id}",
                         ${Object.keys(params)
-                          .filter(
-                            (x) =>
-                              x === 'greeniaRelatedProperty'
-                          )
+                          .filter((x) => x === 'greeniaRelatedProperty')
                           .map((key) => {
-                              return `${key}: "${params[key]}"`;
+                            return `${key}: "${params[key]}"`;
                           })
                           .join(',')}
                       }
@@ -551,19 +578,19 @@ export default class Allostasis<
                   []
                 ).map((i: { node: any }) => i.node),
                 educations: _.get(
-                    profile.data.viewer.profile,
-                    'educations.edges',
-                    []
+                  profile.data.viewer.profile,
+                  'educations.edges',
+                  []
                 ).map((i: { node: any }) => i.node),
                 experiences: _.get(
-                    profile.data.viewer.profile,
-                    'experiences.edges',
-                    []
+                  profile.data.viewer.profile,
+                  'experiences.edges',
+                  []
                 ).map((i: { node: any }) => i.node),
                 posts: _.get(
-                    profile.data.viewer.profile,
-                    'posts.edges',
-                    []
+                  profile.data.viewer.profile,
+                  'posts.edges',
+                  []
                 ).map((i: { node: any }) => i.node)
               };
 
@@ -593,7 +620,7 @@ export default class Allostasis<
                         ...greeniaProfile.data?.viewer?.greeniaProfile,
                         id: profileData.id,
                         greeniaProfileId:
-                          greeniaProfile.data?.viewer?.greeniaProfile.id,
+                          greeniaProfile.data?.viewer?.greeniaProfile.id
                       } as GreeniaProfile);
                     } else {
                       reject(greeniaProfile);
@@ -736,15 +763,13 @@ export default class Allostasis<
         } else {
           resolve({
             ...profile.data.node,
-            chats: _.get(
-                profile.data.node.chats,
-                'edges',
-                []
-            ).map((i: { node: any }) => i.node),
+            chats: _.get(profile.data.node.chats, 'edges', []).map(
+              (i: { node: any }) => i.node
+            ),
             receivedChats: _.get(
-                profile.data.node.receivedChats,
-                'edges',
-                []
+              profile.data.node.receivedChats,
+              'edges',
+              []
             ).map((i: { node: any }) => i.node)
           });
         }
@@ -781,7 +806,7 @@ export default class Allostasis<
 
               resolve({
                 ...rest,
-                greeniaProfileId: greeniaProfile.data.node.id,
+                greeniaProfileId: greeniaProfile.data.node.id
               } as GreeniaProfile);
             }
             break;
@@ -829,7 +854,7 @@ export default class Allostasis<
 
   async sendChatMessage(
     recipient: string,
-    message: Message,
+    message: Message
   ): Promise<MessageWithCID> {
     return new Promise((resolve, reject) => {
       // return this.chatUser.chat.send(recipient, message).then(res => {
@@ -956,6 +981,228 @@ export default class Allostasis<
           reject(e);
         }
       })();
+    });
+  }
+
+  async createPost(params: {
+    body: string;
+    shortDescription?: string;
+    tags?: string[];
+    attachment?: string;
+    externalURL?: string;
+    isEncrypted?: boolean;
+    profileID: string;
+  }): Promise<Post> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const create = await this.composeClient.executeQuery<{
+          createPost: { document: Post };
+        }>(`
+            mutation {
+              createPost(input: {
+                content: {
+                  body: "${params.body}",
+                  shortDescription: "${params.shortDescription}",
+                  profileID: "${params.profileID}",
+                  attachment: "${params.attachment}",
+                  externalURL: "${params.externalURL}",
+                  isEncrypted: ${params.isEncrypted},
+                  tags: [${params.tags.map((i) => `"${i}"`).join(',')}],
+                  createdAt: "${dayjs().toISOString()}",
+                  isDeleted: false
+                }
+              })
+              {
+                document {
+                  id
+                  body
+                  shortDescription
+                  profileID
+                  attachment
+                  externalURL
+                  isEncrypted
+                  tags
+                  createdAt
+                  isDeleted
+                  unifiedAccessControlConditions
+                  encryptedSymmetricKey
+                }
+              }
+            }
+          `);
+
+        if (create.errors != null && create.errors.length > 0) {
+          reject(create);
+        } else {
+          resolve({
+            ...create.data.createPost.document
+          } as Post);
+        }
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  async updatePost(params: {
+    id: string;
+    body: string;
+    shortDescription?: string;
+    tags?: string[];
+    attachment?: string;
+    externalURL?: string;
+    isEncrypted?: boolean;
+    unifiedAccessControlConditions?: boolean;
+    encryptedSymmetricKey?: boolean;
+    profileID: string;
+  }): Promise<Post> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const update = await this.composeClient.executeQuery<{
+          updatePost: { document: Post };
+        }>(`
+            mutation {
+              updatePost(input: {
+                id: "${params.id}",
+                content: {
+                  body: "${params.body}",
+                  shortDescription: "${params.shortDescription}",
+                  profileID: "${params.profileID}",
+                  attachment: "${params.attachment}",
+                  externalURL: "${params.externalURL}",
+                  isEncrypted: ${params.isEncrypted},
+                  unifiedAccessControlConditions: "${
+                    params.unifiedAccessControlConditions
+                  }",
+                  encryptedSymmetricKey: "${params.encryptedSymmetricKey}",
+                  tags: [${params.tags.map((i) => `"${i}"`).join(',')}],
+                  createdAt: "${dayjs().toISOString()}",
+                  isDeleted: false
+                }
+              })
+              {
+                document {
+                  id
+                  body
+                  shortDescription
+                  profileID
+                  attachment
+                  externalURL
+                  isEncrypted
+                  tags
+                  createdAt
+                  isDeleted
+                  unifiedAccessControlConditions
+                  encryptedSymmetricKey
+                }
+              }
+            }
+          `);
+
+        if (update.errors != null && update.errors.length > 0) {
+          reject(update);
+        } else {
+          resolve({
+            ...update.data.updatePost.document
+          } as Post);
+        }
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  async getPosts(params: {
+    numberPerPage: number;
+    cursor: string;
+  }): Promise<{ posts: Post[]; cursor: string }> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const list = await this.composeClient.executeQuery<{
+          postIndex: { edges: { node: Post; cursor: string }[] };
+        }>(`
+            mutation {
+              postIndex(first: ${params.numberPerPage} after: "${params.cursor}") {
+                edges {
+                  node {
+                    id
+                    body
+                    shortDescription
+                    profileID
+                    attachment
+                    externalURL
+                    isEncrypted
+                    tags
+                    createdAt
+                    isDeleted
+                    unifiedAccessControlConditions
+                    encryptedSymmetricKey
+                    profile {
+                      id
+                      displayName
+                      avatar
+                      postsCount
+                      followersCount
+                      followingsCount
+                    }
+                    commentsCount
+                    comments(last: 500) {
+                      edges {
+                        node {
+                          id
+                          content
+                          replyingToID
+                          isDeleted
+                          profileID
+                          profile {
+                            id
+                            displayName
+                            avatar
+                          }
+                        }
+                      }
+                    }
+                    likesCount
+                    likes(last: 500) {
+                      edges {
+                        node {
+                          id
+                          isDeleted
+                          profileID
+                          profile {
+                            id
+                            displayName
+                            avatar
+                          }
+                        }
+                      }
+                    }
+                  }
+                  cursor
+                }
+              }
+            }
+          `);
+
+        if (list.errors != null && list.errors.length > 0) {
+          reject(list);
+        } else {
+          resolve({
+            posts: list.data.postIndex.edges.map((x) => ({
+              ...x.node,
+              likes: _.get(x.node, 'likes.edges', []).map(
+                  (x: { node: PostLike }) => x.node
+              ),
+              comments: _.get(x.node, 'comments.edges', []).map(
+                  (x: { node: PostComment }) => x.node
+              )
+            })),
+            cursor: list.data?.postIndex?.edges.at(-1)?.cursor ?? ''
+          });
+        }
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 }

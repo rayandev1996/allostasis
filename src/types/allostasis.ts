@@ -131,6 +131,7 @@ export interface Post {
   creator?: {
     id?: string;
   };
+  shortDescription?: string;
   body?: string;
   creationDate?: any;
   id?: string;
