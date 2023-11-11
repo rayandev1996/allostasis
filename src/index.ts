@@ -1,12 +1,13 @@
 import {
   AllostasisConstructor,
   Chain,
-  Chat,
-  ChatMessage,
   Communities,
   Profile,
   ProfileTypeBasedOnCommunities,
-  Post, PostLike, PostComment
+  Post,
+  PostLike,
+  PostComment,
+  Follow
 } from './types/allostasis';
 import { GreeniaProfile } from './types/greenia';
 import { CeramicClient } from '@ceramicnetwork/http-client';
@@ -22,24 +23,11 @@ import { Web3Provider } from '@ethersproject/providers';
 import { ethConnect } from '@lit-protocol/auth-browser';
 import _ from 'lodash';
 import dayjs from 'dayjs';
-import {
-  chatMessageAccessControlGenerator,
-  decodeB64,
-  encryptString,
-  getAuthSig
-} from './utils/lit';
+import { decodeB64, getAuthSig } from './utils/lit';
 import { create as createIPFS, IPFSHTTPClient } from 'kubo-rpc-client';
-import { MyBlobToBuffer } from './utils/file';
 import { ethers } from 'ethers';
 import * as PushAPI from '@pushprotocol/restapi';
-import {
-  IFeeds,
-  IMessageIPFS,
-  IUser,
-  Message,
-  MessageWithCID,
-  SignerType
-} from '@pushprotocol/restapi';
+import { IUser, SignerType } from '@pushprotocol/restapi';
 import { ENV } from '@pushprotocol/restapi/src/lib/constants';
 
 export default class Allostasis<
@@ -110,6 +98,10 @@ export default class Allostasis<
     this.ethersProvider = new ethers.providers.Web3Provider(this.provider);
   }
 
+  /*
+   ** Connect the user
+   */
+
   async connect(): Promise<{ did: any; address: string }> {
     return new Promise((resolve, reject) => {
       (async () => {
@@ -117,6 +109,21 @@ export default class Allostasis<
         await this.lit.connect();
 
         try {
+          await this.provider.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: `0x${this.chain.id.toString(16)}`,
+              rpcUrls: ["https://rpc-mumbai.maticvigil.com/v1/96bf5fa6e03d272fbd09de48d03927b95633726c"],
+              chainName: "Mumbai",
+              nativeCurrency: {
+                name: "MATIC",
+                symbol: "MATIC",
+                decimals: 18
+              },
+              blockExplorerUrls: ["https://mumbai.polygonscan.com/"]
+            }]
+          });
+
           await this.provider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: `0x${this.chain.id.toString(16)}` }]
@@ -229,6 +236,10 @@ export default class Allostasis<
     });
   }
 
+  /*
+   ** Disconnect the user
+   */
+
   async disconnect(address?: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       (async () => {
@@ -249,6 +260,10 @@ export default class Allostasis<
       })();
     });
   }
+
+  /*
+   ** Check the connection status of the user
+   */
 
   async isConnected(): Promise<{ did: any; address: string }> {
     return new Promise((resolve, reject) => {
@@ -327,6 +342,10 @@ export default class Allostasis<
       })();
     });
   }
+
+  /*
+   ** Create or update profile for signed used
+   */
 
   async createOrUpdateProfile(
     params: ProfileTypeBasedOnCommunities<TCommunity>
@@ -446,6 +465,10 @@ export default class Allostasis<
     });
   }
 
+  /*
+   ** Get profile of signed account
+   */
+
   async getProfile(): Promise<ProfileTypeBasedOnCommunities<TCommunity>> {
     return new Promise((resolve, reject) => {
       (async () => {
@@ -514,48 +537,6 @@ export default class Allostasis<
                       }
                     }
                   }
-                  chats(last: 300) {
-                    edges {
-                      node {
-                        id
-                        createdAt
-                        isDeleted
-                        profileID
-                        profile {
-                          id
-                          name
-                          avatar
-                        }
-                        recipientProfileID
-                        recipientProfile {
-                          id
-                          name
-                          avatar
-                        }
-                      }
-                    }
-                  }
-                  receivedChats(last: 300) {
-                    edges {
-                      node {
-                        id
-                        createdAt
-                        isDeleted
-                        profileID
-                        profile {
-                          id
-                          name
-                          avatar
-                        }
-                        recipientProfileID
-                        recipientProfile {
-                          id
-                          name
-                          avatar
-                        }
-                      }
-                    }
-                  }
                 }
               }
             }
@@ -567,16 +548,6 @@ export default class Allostasis<
             if (profile.data?.viewer?.profile != null) {
               const profileData = {
                 ...profile.data?.viewer?.profile,
-                chats: _.get(
-                  profile.data.viewer.profile,
-                  'chats.edges',
-                  []
-                ).map((i: { node: any }) => i.node),
-                receivedChats: _.get(
-                  profile.data.viewer.profile,
-                  'receivedChats.edges',
-                  []
-                ).map((i: { node: any }) => i.node),
                 educations: _.get(
                   profile.data.viewer.profile,
                   'educations.edges',
@@ -641,14 +612,15 @@ export default class Allostasis<
     });
   }
 
+  /*
+   ** Get profile of a user
+   */
+
   async getUserProfile(id: string): Promise<Profile> {
     return new Promise((resolve, reject) => {
       (async () => {
         const profile = await this.composeClient.executeQuery<{
-          node: Profile & {
-            chats: { edges: { node: Chat }[] };
-            receivedChats: { edges: { node: Chat }[] };
-          };
+          node: Profile;
         }>(`
           query {
             node(id: "${id}") {
@@ -711,48 +683,6 @@ export default class Allostasis<
                     }
                   }
                 }
-                chats(last: 300) {
-                  edges {
-                    node {
-                      id
-                      createdAt
-                      isDeleted
-                      profileID
-                      profile {
-                        id
-                        name
-                        avatar
-                      }
-                      recipientProfileID
-                      recipientProfile {
-                        id
-                        name
-                        avatar
-                      }
-                    }
-                  }
-                }
-                receivedChats(last: 300) {
-                  edges {
-                    node {
-                      id
-                      createdAt
-                      isDeleted
-                      profileID
-                      profile {
-                        id
-                        name
-                        avatar
-                      }
-                      recipientProfileID
-                      recipientProfile {
-                        id
-                        name
-                        avatar
-                      }
-                    }
-                  }
-                }
               }
             }
           }
@@ -763,19 +693,15 @@ export default class Allostasis<
         } else {
           resolve({
             ...profile.data.node,
-            chats: _.get(profile.data.node.chats, 'edges', []).map(
-              (i: { node: any }) => i.node
-            ),
-            receivedChats: _.get(
-              profile.data.node.receivedChats,
-              'edges',
-              []
-            ).map((i: { node: any }) => i.node)
           });
         }
       })();
     });
   }
+
+  /*
+   ** Get profile of a user in community
+   */
 
   async getCommunityUserProfile(
     id: string
@@ -817,140 +743,9 @@ export default class Allostasis<
     });
   }
 
-  async getChats(): Promise<IFeeds[]> {
-    return new Promise((resolve, reject) => {
-      (async () => {
-        try {
-          // resolve(this.chatUser.chat.list("CHATS"));
-        } catch (e) {
-          reject(e);
-        }
-      })();
-    });
-  }
-
-  async createChat(recipient: string): Promise<MessageWithCID> {
-    return new Promise((resolve, reject) => {
-      // this.chatUser.chat.send(recipient, {
-      //   type: 'Text',
-      //   content: 'Hi! I want to chat with  you.'
-      // }).then(res => {
-      //   resolve(res)
-      // }).catch(err => {
-      //   reject(err)
-      // })
-    });
-  }
-
-  async getChatHistory(recipient: string): Promise<IMessageIPFS[]> {
-    return new Promise((resolve, reject) => {
-      // this.chatUser.chat.history(recipient).then(res => {
-      //   resolve(res)
-      // }).catch(err => {
-      //   reject(err)
-      // })
-    });
-  }
-
-  async sendChatMessage(
-    recipient: string,
-    message: Message
-  ): Promise<MessageWithCID> {
-    return new Promise((resolve, reject) => {
-      // return this.chatUser.chat.send(recipient, message).then(res => {
-      //   resolve(res)
-      // }).catch(err => {
-      //   reject(err)
-      // })
-    });
-  }
-
-  async sendChatMessageFile(
-    file: Blob,
-    chatId: string,
-    profileId: string,
-    userAddress: string,
-    recipientAddress: string
-  ): Promise<ChatMessage> {
-    return new Promise((resolve, reject) => {
-      (async () => {
-        try {
-          MyBlobToBuffer(file, async (err, buff) => {
-            if (err) {
-              reject(err);
-            } else {
-              let upload;
-
-              if (buff != null) {
-                upload = await this.ipfs?.add(buff);
-              }
-
-              const filePath = upload?.path ?? '';
-
-              const encryption = await encryptString(
-                filePath,
-                chatMessageAccessControlGenerator(
-                  userAddress,
-                  recipientAddress
-                ),
-                this.chain,
-                this.lit
-              );
-
-              if (encryption) {
-                const message = await this.composeClient.executeQuery<{
-                  createChatMessage: { document: ChatMessage };
-                }>(`
-                  mutation {
-                    createChatMessage(input: {
-                      content: {
-                        messageType: "file",
-                        chatID: "${chatId}",
-                        profileID: "${profileId}",
-                        createdAt: "${dayjs().toISOString()}",
-                        body: "${encryption.encryptedContent}",
-                        unifiedAccessControlConditions: "${
-                          encryption.unifiedAccessControlConditions
-                        }",
-                        encryptedSymmetricKey: "${
-                          encryption.encryptedSymmetricKey
-                        }"
-                      }
-                    })
-                    {
-                      document {
-                        messageType
-                        id
-                        profileID
-                        profile {
-                          id
-                          name
-                          avatar
-                        }
-                        body
-                        unifiedAccessControlConditions
-                        encryptedSymmetricKey
-                      }
-                    }
-                  }
-                `);
-
-                if (message.errors != null && message.errors.length > 0) {
-                  reject(message);
-                } else {
-                  resolve(message.data.createChatMessage.document);
-                }
-              } else {
-                reject('Cannot encrypt message');
-              }
-            }
-          });
-        } catch (e) {
-          reject(e);
-        }
-      })();
-    });
-  }
+  /*
+   ** Decrypt an encrypted content
+   */
 
   async decryptContent(
     content: string,
@@ -984,6 +779,10 @@ export default class Allostasis<
     });
   }
 
+  /*
+   ** Create a post
+   */
+
   async createPost(params: {
     body: string;
     shortDescription?: string;
@@ -998,38 +797,38 @@ export default class Allostasis<
         const create = await this.composeClient.executeQuery<{
           createPost: { document: Post };
         }>(`
-            mutation {
-              createPost(input: {
-                content: {
-                  body: "${params.body}",
-                  shortDescription: "${params.shortDescription}",
-                  profileID: "${params.profileID}",
-                  attachment: "${params.attachment}",
-                  externalURL: "${params.externalURL}",
-                  isEncrypted: ${params.isEncrypted},
-                  tags: [${params.tags.map((i) => `"${i}"`).join(',')}],
-                  createdAt: "${dayjs().toISOString()}",
-                  isDeleted: false
-                }
-              })
-              {
-                document {
-                  id
-                  body
-                  shortDescription
-                  profileID
-                  attachment
-                  externalURL
-                  isEncrypted
-                  tags
-                  createdAt
-                  isDeleted
-                  unifiedAccessControlConditions
-                  encryptedSymmetricKey
-                }
+          mutation {
+            createPost(input: {
+              content: {
+                body: "${params.body}",
+                shortDescription: "${params.shortDescription}",
+                profileID: "${params.profileID}",
+                attachment: "${params.attachment}",
+                externalURL: "${params.externalURL}",
+                isEncrypted: ${params.isEncrypted},
+                tags: [${params.tags.map((i) => `"${i}"`).join(',')}],
+                createdAt: "${dayjs().toISOString()}",
+                isDeleted: false
+              }
+            })
+            {
+              document {
+                id
+                body
+                shortDescription
+                profileID
+                attachment
+                externalURL
+                isEncrypted
+                tags
+                createdAt
+                isDeleted
+                unifiedAccessControlConditions
+                encryptedSymmetricKey
               }
             }
-          `);
+          }
+        `);
 
         if (create.errors != null && create.errors.length > 0) {
           reject(create);
@@ -1043,6 +842,10 @@ export default class Allostasis<
       }
     });
   }
+
+  /*
+   ** Update a post
+   */
 
   async updatePost(params: {
     id: string;
@@ -1061,43 +864,43 @@ export default class Allostasis<
         const update = await this.composeClient.executeQuery<{
           updatePost: { document: Post };
         }>(`
-            mutation {
-              updatePost(input: {
-                id: "${params.id}",
-                content: {
-                  body: "${params.body}",
-                  shortDescription: "${params.shortDescription}",
-                  profileID: "${params.profileID}",
-                  attachment: "${params.attachment}",
-                  externalURL: "${params.externalURL}",
-                  isEncrypted: ${params.isEncrypted},
-                  unifiedAccessControlConditions: "${
-                    params.unifiedAccessControlConditions
-                  }",
-                  encryptedSymmetricKey: "${params.encryptedSymmetricKey}",
-                  tags: [${params.tags.map((i) => `"${i}"`).join(',')}],
-                  createdAt: "${dayjs().toISOString()}",
-                  isDeleted: false
-                }
-              })
-              {
-                document {
-                  id
-                  body
-                  shortDescription
-                  profileID
-                  attachment
-                  externalURL
-                  isEncrypted
-                  tags
-                  createdAt
-                  isDeleted
-                  unifiedAccessControlConditions
-                  encryptedSymmetricKey
-                }
+          mutation {
+            updatePost(input: {
+              id: "${params.id}",
+              content: {
+                body: "${params.body}",
+                shortDescription: "${params.shortDescription}",
+                profileID: "${params.profileID}",
+                attachment: "${params.attachment}",
+                externalURL: "${params.externalURL}",
+                isEncrypted: ${params.isEncrypted},
+                unifiedAccessControlConditions: "${
+                  params.unifiedAccessControlConditions
+                }",
+                encryptedSymmetricKey: "${params.encryptedSymmetricKey}",
+                tags: [${params.tags.map((i) => `"${i}"`).join(',')}],
+                createdAt: "${dayjs().toISOString()}",
+                isDeleted: false
+              }
+            })
+            {
+              document {
+                id
+                body
+                shortDescription
+                profileID
+                attachment
+                externalURL
+                isEncrypted
+                tags
+                createdAt
+                isDeleted
+                unifiedAccessControlConditions
+                encryptedSymmetricKey
               }
             }
-          `);
+          }
+        `);
 
         if (update.errors != null && update.errors.length > 0) {
           reject(update);
@@ -1112,6 +915,10 @@ export default class Allostasis<
     });
   }
 
+  /*
+   ** Get the list of posts
+   */
+
   async getPosts(params: {
     numberPerPage: number;
     cursor: string;
@@ -1121,68 +928,68 @@ export default class Allostasis<
         const list = await this.composeClient.executeQuery<{
           postIndex: { edges: { node: Post; cursor: string }[] };
         }>(`
-            mutation {
-              postIndex(first: ${params.numberPerPage} after: "${params.cursor}") {
-                edges {
-                  node {
+          mutation {
+            postsIndex(first: ${params.numberPerPage} after: "${params.cursor}") {
+              edges {
+                node {
+                  id
+                  body
+                  shortDescription
+                  profileID
+                  attachment
+                  externalURL
+                  isEncrypted
+                  tags
+                  createdAt
+                  isDeleted
+                  unifiedAccessControlConditions
+                  encryptedSymmetricKey
+                  profile {
                     id
-                    body
-                    shortDescription
-                    profileID
-                    attachment
-                    externalURL
-                    isEncrypted
-                    tags
-                    createdAt
-                    isDeleted
-                    unifiedAccessControlConditions
-                    encryptedSymmetricKey
-                    profile {
-                      id
-                      displayName
-                      avatar
-                      postsCount
-                      followersCount
-                      followingsCount
-                    }
-                    commentsCount
-                    comments(last: 500) {
-                      edges {
-                        node {
+                    displayName
+                    avatar
+                    postsCount
+                    followersCount
+                    followingsCount
+                  }
+                  commentsCount
+                  comments(last: 500) {
+                    edges {
+                      node {
+                        id
+                        content
+                        replyingToID
+                        isDeleted
+                        profileID
+                        profile {
                           id
-                          content
-                          replyingToID
-                          isDeleted
-                          profileID
-                          profile {
-                            id
-                            displayName
-                            avatar
-                          }
-                        }
-                      }
-                    }
-                    likesCount
-                    likes(last: 500) {
-                      edges {
-                        node {
-                          id
-                          isDeleted
-                          profileID
-                          profile {
-                            id
-                            displayName
-                            avatar
-                          }
+                          displayName
+                          avatar
                         }
                       }
                     }
                   }
-                  cursor
+                  likesCount
+                  likes(last: 500) {
+                    edges {
+                      node {
+                        id
+                        isDeleted
+                        profileID
+                        profile {
+                          id
+                          displayName
+                          avatar
+                        }
+                      }
+                    }
+                  }
                 }
+                cursor
               }
             }
-          `);
+          }
+        `);
 
         if (list.errors != null && list.errors.length > 0) {
           reject(list);
@@ -1191,10 +998,10 @@ export default class Allostasis<
             posts: list.data.postIndex.edges.map((x) => ({
               ...x.node,
               likes: _.get(x.node, 'likes.edges', []).map(
-                  (x: { node: PostLike }) => x.node
+                (x: { node: PostLike }) => x.node
               ),
               comments: _.get(x.node, 'comments.edges', []).map(
-                  (x: { node: PostComment }) => x.node
+                (x: { node: PostComment }) => x.node
               )
             })),
             cursor: list.data?.postIndex?.edges.at(-1)?.cursor ?? ''
@@ -1205,4 +1012,413 @@ export default class Allostasis<
       }
     });
   }
+
+  /*
+   ** Get a post by ID
+   */
+
+  async getPost(params: { id: string }): Promise<Post | undefined> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const post = await this.composeClient.executeQuery<{
+          node: Post;
+        }>(`
+          query {
+            node(id: "${params.id}") {
+              ... on Post {
+                creator {
+                  id
+                }
+                id
+                body
+                shortDescription
+                profileID
+                attachment
+                externalURL
+                isEncrypted
+                tags
+                createdAt
+                isDeleted
+                unifiedAccessControlConditions
+                encryptedSymmetricKey
+                profile {
+                  id
+                  displayName
+                  avatar
+                  postsCount
+                  followersCount
+                  followingsCount
+                }
+                commentsCount
+                comments(last: 500) {
+                  edges {
+                    node {
+                      id
+                      content
+                      replyingToID
+                      isDeleted
+                      profileID
+                      profile {
+                        id
+                        displayName
+                        avatar
+                      }
+                    }
+                  }
+                }
+                likesCount
+                likes(last: 500) {
+                  edges {
+                    node {
+                      id
+                      isDeleted
+                      profileID
+                      profile {
+                        id
+                        displayName
+                        avatar
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `);
+
+        if (post.errors != null && post.errors.length > 0) {
+          reject(post);
+        } else {
+          resolve({
+            ...post.data.node,
+            likes: _.get(post.data.node, 'likes.edges', []).map(
+              (x: { node: PostLike }) => x.node
+            ),
+            comments: _.get(post.data.node, 'comments.edges', []).map(
+              (x: { node: PostComment }) => x.node
+            )
+          });
+        }
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  /*
+   ** Create a post comment
+   */
+
+  createPostComment = async (params: {
+    content: string;
+    postID: string;
+    profileID: string;
+  }): Promise<PostComment | undefined> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const create = await this.composeClient.executeQuery<{
+          createPostComment: { document: PostComment };
+        }>(`
+          mutation {
+            createPostComment(input: {
+              content: {
+                content: "${params.content}",
+                postID: "${params.postID}",
+                profileID: "${params.profileID}",
+                isDeleted: false
+              }
+            }) 
+            {
+              document {
+                id
+                content
+                postID
+                profileID
+                isDeleted
+              }
+            }
+          }
+        `);
+
+        if (create.errors != null && create.errors.length > 0) {
+          reject(create);
+        } else {
+          resolve(create.data?.createPostComment?.document);
+        }
+      } catch (e) {
+        reject(e);
+      }
+    });
+  };
+
+  /*
+   ** Like or unlike a post
+   */
+
+  likePost = async (params: {
+    postID: string;
+    profileID: string;
+  }): Promise<boolean> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const liked = await this.composeClient.executeQuery<{
+          postLikesIndex: { edges: { node: PostLike }[] };
+        }>(`
+          query {
+            postLikesIndex(
+              filters: {
+                input: {
+                  and: [
+                    {
+                      where: {
+                        postID: {
+                          equalTo: "${params.postID}"
+                        }
+                      }
+                    },
+                    {
+                      where: {
+                        profileID: {
+                          equalTo: "${params.profileID}"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              last: 1
+              ) {
+                edges {
+                  node {
+                    id
+                    postID
+                    profileID
+                    isDeleted
+                  }
+                }
+              }
+            }
+          }
+        `);
+
+        if (liked.errors != null && liked.errors.length > 0) {
+          reject(liked);
+        } else {
+          if (liked.data.postLikesIndex.edges.length > 0) {
+            if (liked.data.postLikesIndex.edges[0].node.isDeleted) {
+              await this.composeClient.executeQuery<{
+                createPostLike: { document: PostLike };
+              }>(`
+                mutation {
+                  createPostLike(input: {
+                    content: {
+                      postID: "${params.postID}",
+                      profileID: "${params.profileID}",
+                      isDeleted: false
+                    }
+                  }) 
+                  {
+                    document {
+                      id
+                      postID
+                      profileID
+                      isDeleted
+                    }
+                  }
+                }
+              `);
+
+              resolve(true);
+            } else {
+              await this.composeClient.executeQuery<{
+                updatePostLike: { document: PostLike };
+              }>(`
+                mutation {
+                  updatePostLike(input: {
+                    id: "${liked.data.postLikesIndex.edges[0].node.id}",
+                    content: {
+                      isDeleted: true
+                    }
+                  }) 
+                  {
+                    document {
+                      id
+                      postID
+                      profileID
+                      isDeleted
+                    }
+                  }
+                }
+              `);
+
+              resolve(false);
+            }
+          } else {
+            await this.composeClient.executeQuery<{
+              createPostLike: { document: PostLike };
+            }>(`
+              mutation {
+                createPostLike(input: {
+                  content: {
+                    postID: "${params.postID}",
+                    profileID: "${params.profileID}",
+                    isDeleted: false
+                  }
+                }) 
+                {
+                  document {
+                    id
+                    postID
+                    profileID
+                    isDeleted
+                  }
+                }
+              }
+            `);
+
+            resolve(true);
+          }
+        }
+      } catch (e) {
+        reject(e);
+      }
+    });
+  };
+
+  /*
+   ** Follow or unfollow a user
+   */
+
+  follow = async (params: {
+    targetProfileID: string;
+    profileID: string;
+  }): Promise<boolean> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const followed = await this.composeClient.executeQuery<{
+          followsIndex: { edges: { node: Follow }[] };
+        }>(`
+          query {
+            followsIndex(
+              filters: {
+                input: {
+                  and: [
+                    {
+                      where: {
+                        profileID: {
+                          equalTo: "${params.profileID}"
+                        }
+                      }
+                    },
+                    {
+                      where: {
+                        targetProfileID: {
+                          equalTo: "${params.targetProfileID}"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              last: 1
+              ) {
+                edges {
+                  node {
+                    creator {
+                      id
+                    }
+                    id
+                    targetProfileID
+                    profileID
+                    isDeleted
+                  }
+                }
+              }
+            }
+          }
+        `);
+
+        if (followed.errors != null && followed.errors.length > 0) {
+          reject(followed);
+        } else {
+          if (followed.data.followsIndex.edges.length > 0) {
+            if (followed.data.followsIndex.edges[0].node.isDeleted) {
+              await this.composeClient.executeQuery<{
+                createFollow: { document: Follow };
+              }>(`
+                mutation {
+                  createFollow(input: {
+                    content: {
+                      profileID: "${params.profileID}",
+                      targetProfileID: "${params.targetProfileID}",
+                      isDeleted: false
+                    }
+                  })
+                  {
+                    document {
+                      id
+                      targetProfileID
+                      profileID
+                      isDeleted
+                    }
+                  }
+                }
+              `);
+
+              resolve(true);
+            } else {
+              await this.composeClient.executeQuery<{
+                updateFollow: { document: Follow };
+              }>(`
+                mutation {
+                  updateFollow(input: {
+                    id: "${followed.data.followsIndex.edges[0].node.id}",
+                    content: {
+                      isDeleted: true
+                    }
+                  })
+                  {
+                    document {
+                      id
+                      targetProfileID
+                      profileID
+                      isDeleted
+                    }
+                  }
+                }
+              `);
+
+              resolve(false);
+            }
+          } else {
+            await this.composeClient.executeQuery<{
+              createFollow: { document: Follow };
+            }>(`
+              mutation {
+                createFollow(input: {
+                  content: {
+                    profileID: "${params.profileID}",
+                    targetProfileID: "${params.targetProfileID}",
+                    isDeleted: false
+                  }
+                })
+                {
+                  document {
+                    id
+                    targetProfileID
+                    profileID
+                    isDeleted
+                  }
+                }
+              }
+            `);
+
+            resolve(true);
+          }
+        }
+      } catch (e) {
+        reject(e);
+      }
+    });
+  };
 }

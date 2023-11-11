@@ -52,8 +52,8 @@ export interface Profile {
   gender?: Gender;
   educations?: Education[];
   experiences?: Experience[];
-  articles?: Post[];
-  articlesCount?: number;
+  posts?: Post[];
+  postsCount?: number;
   followings?: Follow[];
   followingsCount?: number;
   followers?: Follow[];
@@ -128,13 +128,13 @@ export interface Experience {
 }
 
 export interface Post {
+  id?: string;
   creator?: {
     id?: string;
   };
   shortDescription?: string;
   body?: string;
   creationDate?: any;
-  id?: string;
   isDeleted?: boolean;
   isEncrypted?: boolean;
   profileID?: string;
@@ -163,8 +163,9 @@ export interface Follow {
 }
 
 export interface PostComment {
+  id?: string;
   content?: string;
-  articleID?: string;
+  postID?: string;
   isDeleted?: boolean;
   replyingToID?: string;
   profileID?: string;
@@ -172,7 +173,8 @@ export interface PostComment {
 }
 
 export interface PostLike {
-  articleID?: string;
+  id?: string;
+  postID?: string;
   isDeleted?: boolean;
   profileID?: string;
   profile?: Profile
