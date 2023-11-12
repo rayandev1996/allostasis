@@ -13,6 +13,7 @@ export interface AllostasisConstructor {
         projectId: string;
         apiKey: string;
     };
+    connectPush?: boolean;
 }
 export interface Chain {
     name: string;
@@ -46,8 +47,8 @@ export interface Profile {
     gender?: Gender;
     educations?: Education[];
     experiences?: Experience[];
-    articles?: Post[];
-    articlesCount?: number;
+    posts?: Post[];
+    postsCount?: number;
     followings?: Follow[];
     followingsCount?: number;
     followers?: Follow[];
@@ -115,12 +116,12 @@ export interface Experience {
     isDeleted?: boolean;
 }
 export interface Post {
+    id?: string;
     creator?: {
         id?: string;
     };
     body?: string;
-    creationDate?: any;
-    id?: string;
+    createdAt?: any;
     isDeleted?: boolean;
     isEncrypted?: boolean;
     profileID?: string;
@@ -147,15 +148,18 @@ export interface Follow {
     targetProfile?: Profile;
 }
 export interface PostComment {
+    id?: string;
     content?: string;
-    articleID?: string;
+    createdAt?: any;
+    postID?: string;
     isDeleted?: boolean;
     replyingToID?: string;
     profileID?: string;
     profile?: Profile;
 }
 export interface PostLike {
-    articleID?: string;
+    id?: string;
+    postID?: string;
     isDeleted?: boolean;
     profileID?: string;
     profile?: Profile;

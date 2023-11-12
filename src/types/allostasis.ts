@@ -16,6 +16,7 @@ export interface AllostasisConstructor {
     projectId: string;
     apiKey: string
   }
+  connectPush?: boolean;
 }
 
 export interface Chain {
@@ -132,9 +133,8 @@ export interface Post {
   creator?: {
     id?: string;
   };
-  shortDescription?: string;
   body?: string;
-  creationDate?: any;
+  createdAt?: any;
   isDeleted?: boolean;
   isEncrypted?: boolean;
   profileID?: string;
@@ -165,6 +165,7 @@ export interface Follow {
 export interface PostComment {
   id?: string;
   content?: string;
+  createdAt?: any;
   postID?: string;
   isDeleted?: boolean;
   replyingToID?: string;
