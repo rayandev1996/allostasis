@@ -117,4 +117,8 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
         targetProfileID: string;
         profileID: string;
     }) => Promise<boolean>;
+    userFollows: (params: {
+        targetProfileID: string;
+        profileID: string;
+    }) => Promise<boolean>;
 }

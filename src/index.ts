@@ -744,7 +744,7 @@ export default class Allostasis<
                   phoneNumber
                   address
                   socialLinks
-                  experiences(last: 300) {
+                  experiences(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                     edges {
                       node {
                         id
@@ -758,7 +758,7 @@ export default class Allostasis<
                       }
                     }
                   }
-                  educations(last: 300) {
+                  educations(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                     edges {
                       node {
                         id
@@ -772,20 +772,71 @@ export default class Allostasis<
                       }
                     }
                   }
-                  posts(last: 300) {
+                  postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                  posts(filters: { where: { isDeleted: { equalTo: false } } }, sorting: { createdAt: DESC }, last: 1000) {
                     edges {
                       node {
                         id
                         body
                         isDeleted
                         isEncrypted
+                        createdAt
                         tags
                         attachment
                         externalURL
                         encryptedSymmetricKey
                         unifiedAccessControlConditions
-                        commentsCount
-                        likesCount
+                        commentsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        comments(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
+                          edges {
+                            node {
+                              id
+                              content
+                              replyingToID
+                              createdAt
+                              isDeleted
+                              profileID
+                              profile {
+                                id
+                                displayName
+                                avatar
+                              }
+                            }
+                          }
+                        }
+                        likesCount(filters: { where: { isDeleted: { equalTo: false } } })
+                      }
+                    }
+                  }
+                  followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                  followers(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
+                    edges {
+                      node {
+                        id
+                        isDeleted
+                        profile {
+                          displayName
+                          avatar
+                          postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                          followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                          followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        }
+                      }
+                    }
+                  }
+                  followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                  followings(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
+                    edges {
+                      node {
+                        id
+                        isDeleted
+                        targetProfile {
+                          displayName
+                          avatar
+                          postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                          followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                          followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        }
                       }
                     }
                   }
@@ -894,7 +945,7 @@ export default class Allostasis<
                 phoneNumber
                 address
                 socialLinks
-                experiences(last: 300) {
+                experiences(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                   edges {
                     node {
                       id
@@ -908,7 +959,7 @@ export default class Allostasis<
                     }
                   }
                 }
-                educations(last: 300) {
+                educations(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                   edges {
                     node {
                       id
@@ -922,20 +973,71 @@ export default class Allostasis<
                     }
                   }
                 }
-                posts(last: 300) {
+                postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                posts(filters: { where: { isDeleted: { equalTo: false } } }, sorting: { createdAt: DESC }, last: 1000) {
                   edges {
                     node {
                       id
                       body
                       isDeleted
                       isEncrypted
+                      createdAt
                       tags
                       attachment
                       externalURL
                       encryptedSymmetricKey
                       unifiedAccessControlConditions
-                      commentsCount
-                      likesCount
+                      commentsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                      comments(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
+                        edges {
+                          node {
+                            id
+                            content
+                            replyingToID
+                            createdAt
+                            isDeleted
+                            profileID
+                            profile {
+                              id
+                              displayName
+                              avatar
+                            }
+                          }
+                        }
+                      }
+                      likesCount(filters: { where: { isDeleted: { equalTo: false } } })
+                    }
+                  }
+                }
+                followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                followers(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
+                  edges {
+                    node {
+                      id
+                      isDeleted
+                      profile {
+                        displayName
+                        avatar
+                        postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                      }
+                    }
+                  }
+                }
+                followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                followings(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
+                  edges {
+                    node {
+                      id
+                      isDeleted
+                      targetProfile {
+                        displayName
+                        avatar
+                        postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                      }
                     }
                   }
                 }
@@ -1179,7 +1281,11 @@ export default class Allostasis<
           postIndex: { edges: { node: Post; cursor: string }[] };
         }>(`
           query {
-            postIndex(first: ${params.numberPerPage}, after: "${params.cursor}") {
+            postIndex(
+              sorting: { createdAt: DESC },
+              first: ${params.numberPerPage}, 
+              after: "${params.cursor}"
+            ) {
               edges {
                 node {
                   id
@@ -1197,17 +1303,18 @@ export default class Allostasis<
                     id
                     displayName
                     avatar
-                    postsCount
-                    followersCount
-                    followingsCount
+                    postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                    followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                    followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
                   }
-                  commentsCount
-                  comments(last: 500) {
+                  commentsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                  comments(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                     edges {
                       node {
                         id
                         content
                         replyingToID
+                        createdAt
                         isDeleted
                         profileID
                         profile {
@@ -1218,8 +1325,8 @@ export default class Allostasis<
                       }
                     }
                   }
-                  likesCount
-                  likes(last: 500) {
+                  likesCount(filters: { where: { isDeleted: { equalTo: false } } })
+                  likes(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                     edges {
                       node {
                         id
@@ -1293,17 +1400,18 @@ export default class Allostasis<
                   id
                   displayName
                   avatar
-                  postsCount
-                  followersCount
-                  followingsCount
+                  postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                  followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                  followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
                 }
-                commentsCount
-                comments(last: 500) {
+                commentsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                comments(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                   edges {
                     node {
                       id
                       content
                       replyingToID
+                      createdAt
                       isDeleted
                       profileID
                       profile {
@@ -1314,8 +1422,8 @@ export default class Allostasis<
                     }
                   }
                 }
-                likesCount
-                likes(last: 500) {
+                likesCount(filters: { where: { isDeleted: { equalTo: false } } })
+                likes(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                   edges {
                     node {
                       id
@@ -1412,29 +1520,27 @@ export default class Allostasis<
     return new Promise(async (resolve, reject) => {
       try {
         const liked = await this.composeClient.executeQuery<{
-          postLikesIndex: { edges: { node: PostLike }[] };
+          postLikeIndex: { edges: { node: PostLike }[] };
         }>(`
           query {
-            postLikesIndex(
+            postLikeIndex(
               filters: {
-                input: {
-                  and: [
-                    {
-                      where: {
-                        postID: {
-                          equalTo: "${params.postID}"
-                        }
-                      }
-                    },
-                    {
-                      where: {
-                        profileID: {
-                          equalTo: "${params.profileID}"
-                        }
+                and: [
+                  {
+                    where: {
+                      postID: {
+                        equalTo: "${params.postID}"
                       }
                     }
-                  ]
-                }
+                  },
+                  {
+                    where: {
+                      profileID: {
+                        equalTo: "${params.profileID}"
+                      }
+                    }
+                  }
+                ]
               },
               last: 1
             ) {
@@ -1453,8 +1559,8 @@ export default class Allostasis<
         if (liked.errors != null && liked.errors.length > 0) {
           reject(liked);
         } else {
-          if (liked.data.postLikesIndex.edges.length > 0) {
-            if (liked.data.postLikesIndex.edges[0].node.isDeleted) {
+          if (liked.data.postLikeIndex.edges.length > 0) {
+            if (liked.data.postLikeIndex.edges[0].node.isDeleted) {
               await this.composeClient.executeQuery<{
                 createPostLike: { document: PostLike };
               }>(`
@@ -1484,7 +1590,7 @@ export default class Allostasis<
               }>(`
                 mutation {
                   updatePostLike(input: {
-                    id: "${liked.data.postLikesIndex.edges[0].node.id}",
+                    id: "${liked.data.postLikeIndex.edges[0].node.id}",
                     content: {
                       isDeleted: true
                     }
@@ -1545,29 +1651,27 @@ export default class Allostasis<
     return new Promise(async (resolve, reject) => {
       try {
         const followed = await this.composeClient.executeQuery<{
-          followsIndex: { edges: { node: Follow }[] };
+          followIndex: { edges: { node: Follow }[] };
         }>(`
           query {
-            followsIndex(
+            followIndex(
               filters: {
-                input: {
-                  and: [
-                    {
-                      where: {
-                        profileID: {
-                          equalTo: "${params.profileID}"
-                        }
-                      }
-                    },
-                    {
-                      where: {
-                        targetProfileID: {
-                          equalTo: "${params.targetProfileID}"
-                        }
+                and: [
+                  {
+                    where: {
+                      profileID: {
+                        equalTo: "${params.profileID}"
                       }
                     }
-                  ]
-                }
+                  },
+                  {
+                    where: {
+                      targetProfileID: {
+                        equalTo: "${params.targetProfileID}"
+                      }
+                    }
+                  }
+                ]
               },
               last: 1
             ) {
@@ -1589,8 +1693,8 @@ export default class Allostasis<
         if (followed.errors != null && followed.errors.length > 0) {
           reject(followed);
         } else {
-          if (followed.data.followsIndex.edges.length > 0) {
-            if (followed.data.followsIndex.edges[0].node.isDeleted) {
+          if (followed.data.followIndex.edges.length > 0) {
+            if (followed.data.followIndex.edges[0].node.isDeleted) {
               await this.composeClient.executeQuery<{
                 createFollow: { document: Follow };
               }>(`
@@ -1620,7 +1724,7 @@ export default class Allostasis<
               }>(`
                 mutation {
                   updateFollow(input: {
-                    id: "${followed.data.followsIndex.edges[0].node.id}",
+                    id: "${followed.data.followIndex.edges[0].node.id}",
                     content: {
                       isDeleted: true
                     }
@@ -1662,6 +1766,75 @@ export default class Allostasis<
             `);
 
             resolve(true);
+          }
+        }
+      } catch (e) {
+        reject(e);
+      }
+    });
+  };
+
+  /*
+   ** User follows others or not
+   */
+
+  userFollows = async (params: {
+    targetProfileID: string;
+    profileID: string;
+  }): Promise<boolean> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const followed = await this.composeClient.executeQuery<{
+          followIndex: { edges: { node: Follow }[] };
+        }>(`
+          query {
+            followIndex(
+              filters: {
+                and: [
+                  {
+                    where: {
+                      profileID: {
+                        equalTo: "${params.profileID}"
+                      }
+                    }
+                  },
+                  {
+                    where: {
+                      targetProfileID: {
+                        equalTo: "${params.targetProfileID}"
+                      }
+                    }
+                  }
+                ]
+              },
+              last: 1
+            ) {
+              edges {
+                node {
+                  creator {
+                    id
+                  }
+                  id
+                  targetProfileID
+                  profileID
+                  isDeleted
+                }
+              }
+            }
+          }
+        `);
+
+        if (followed.errors != null && followed.errors.length > 0) {
+          reject(followed);
+        } else {
+          if (followed.data.followIndex.edges.length > 0) {
+            if (followed.data.followIndex.edges[0].node.isDeleted) {
+              resolve(false);
+            } else {
+              resolve(true);
+            }
+          } else {
+            resolve(false);
           }
         }
       } catch (e) {

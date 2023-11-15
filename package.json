@@ -1,6 +1,6 @@
 {
   "name": "allostasis-js-sdk",
-  "version": "1.0.78",
+  "version": "1.0.87",
   "description": "Allostasis data management",
   "main": "index.js",
   "scripts": {
@@ -27,8 +27,8 @@
   },
   "dependencies": {
     "@ceramicnetwork/http-client": "^2.27.0",
-    "@composedb/client": "^0.4.4",
-    "@composedb/types": "^0.4.4",
+    "@composedb/client": "^0.5.2",
+    "@composedb/types": "^0.5.1",
     "@didtools/pkh-ethereum": "^0.4.0",
     "@ethersproject/providers": "^5.7.2",
     "@lit-protocol/lit-node-client": "^2.2.47",
