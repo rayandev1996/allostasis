@@ -30,6 +30,12 @@ export declare const definition: {
                 type: string;
             };
         };
+        Follow: {
+            id: string;
+            accountRelation: {
+                type: string;
+            };
+        };
         Education: {
             id: string;
             accountRelation: {
@@ -37,12 +43,6 @@ export declare const definition: {
             };
         };
         Asset: {
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        Follow: {
             id: string;
             accountRelation: {
                 type: string;
@@ -260,7 +260,7 @@ export declare const definition: {
             };
         };
         Chat: {
-            channelId: {
+            channelID: {
                 type: string;
                 required: boolean;
             };
@@ -571,6 +571,45 @@ export declare const definition: {
                 };
             };
         };
+        Follow: {
+            isDeleted: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            profileID: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            targetProfileID: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            creator: {
+                type: string;
+                viewType: string;
+            };
+            profile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            targetProfile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+        };
         Education: {
             city: {
                 type: string;
@@ -666,45 +705,6 @@ export declare const definition: {
                 viewType: string;
             };
             profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
-        Follow: {
-            isDeleted: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            targetProfileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            targetProfile: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -830,15 +830,15 @@ export declare const definition: {
             type: string;
             name: string;
         };
+        followList: {
+            type: string;
+            name: string;
+        };
         educationList: {
             type: string;
             name: string;
         };
         assetList: {
-            type: string;
-            name: string;
-        };
-        followList: {
             type: string;
             name: string;
         };

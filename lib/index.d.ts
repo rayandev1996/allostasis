@@ -1,5 +1,5 @@
 import { UnifiedAccessControlConditions } from '@lit-protocol/types/src/lib/types';
-import { AllostasisConstructor, Chain, Communities, Profile, ProfileTypeBasedOnCommunities, Post, PostComment, Education, Experience } from './types/allostasis';
+import { AllostasisConstructor, Chain, Communities, Profile, ProfileTypeBasedOnCommunities, Post, PostComment, Education, Experience, Chat, ChatMessage } from './types/allostasis';
 import { CeramicClient } from '@ceramicnetwork/http-client';
 import { ComposeClient } from '@composedb/client';
 import { LitNodeClient } from '@lit-protocol/lit-node-client';
@@ -141,4 +141,22 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
         targetProfileID: string;
         profileID: string;
     }) => Promise<boolean>;
+    getOrCreateChat(params: {
+        profileID: string;
+        recipientProfileID: string;
+        channelID: string;
+    }): Promise<Chat>;
+    getChats(params: {
+        profile: string;
+        cursor: string;
+    }): Promise<{
+        chats: Chat[];
+        cursor: string;
+    }>;
+    sendMessage(params: {
+        content: string;
+        chatID: string;
+        profileID: string;
+        unifiedAccessControlConditions: UnifiedAccessControlConditions;
+    }): Promise<ChatMessage>;
 }

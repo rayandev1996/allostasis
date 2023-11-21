@@ -86,7 +86,7 @@ export enum Gender {
 }
 
 export interface Chat {
-  channelId?: string;
+  channelID?: string;
   createdAt?: string;
   id?: string;
   isDeleted?: boolean;

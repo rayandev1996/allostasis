@@ -77,7 +77,7 @@ export declare enum Gender {
     OTHER = "OTHER"
 }
 export interface Chat {
-    channelId?: string;
+    channelID?: string;
     createdAt?: string;
     id?: string;
     isDeleted?: boolean;

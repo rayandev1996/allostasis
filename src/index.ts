@@ -10,7 +10,9 @@ import {
   PostComment,
   Follow,
   Education,
-  Experience
+  Experience,
+  Chat,
+  ChatMessage
 } from './types/allostasis';
 import { GreeniaProfile } from './types/greenia';
 import { CeramicClient } from '@ceramicnetwork/http-client';
@@ -823,7 +825,7 @@ export default class Allostasis<
                   chats(last: 1000, filters: { where: { isDeleted: { equalTo: false } } }) {
                     edges {
                       node {
-                        channelId
+                        channelID
                         createdAt
                         id
                         isDeleted
@@ -869,7 +871,7 @@ export default class Allostasis<
                   receivedChats(last: 1000, filters: { where: { isDeleted: { equalTo: false } } }) {
                     edges {
                       node {
-                        channelId
+                        channelID
                         createdAt
                         id
                         isDeleted
@@ -949,8 +951,10 @@ export default class Allostasis<
                 ).map((i: { node: any }) => {
                   return {
                     ...i.node,
-                    messages: _.get(i.node, 'messages.edges', []).map(j => j.node),
-                  }
+                    messages: _.get(i.node, 'messages.edges', []).map(
+                      (j) => j.node
+                    )
+                  };
                 }),
                 receivedChats: _.get(
                   profile.data.viewer.profile,
@@ -959,8 +963,10 @@ export default class Allostasis<
                 ).map((i: { node: any }) => {
                   return {
                     ...i.node,
-                    messages: _.get(i.node, 'messages.edges', []).map(j => j.node),
-                  }
+                    messages: _.get(i.node, 'messages.edges', []).map(
+                      (j) => j.node
+                    )
+                  };
                 }),
                 posts: _.get(
                   profile.data.viewer.profile,
@@ -1527,7 +1533,11 @@ export default class Allostasis<
   async encryptContent(
     content: string,
     unifiedAccessControlConditions: UnifiedAccessControlConditions
-  ): Promise<{ encryptedString: string, encryptedSymmetricKey: string, unifiedAccessControlConditions: string }> {
+  ): Promise<{
+    encryptedString: string;
+    encryptedSymmetricKey: string;
+    unifiedAccessControlConditions: string;
+  }> {
     return new Promise(async (resolve, reject) => {
       try {
         const store = new Store();
@@ -1542,13 +1552,15 @@ export default class Allostasis<
           unifiedAccessControlConditions,
           symmetricKey,
           authSig,
-          chain: `${this.chain.id}`,
+          chain: `${this.chain.id}`
         });
 
-        resolve({ 
-          encryptedString: await blobToBase64(encryptedString), 
+        resolve({
+          encryptedString: await blobToBase64(encryptedString),
           encryptedSymmetricKey: buf2hex(encryptedSymmetricKey),
-          unifiedAccessControlConditions: btoa(JSON.stringify(unifiedAccessControlConditions)),
+          unifiedAccessControlConditions: btoa(
+            JSON.stringify(unifiedAccessControlConditions)
+          )
         });
       } catch (e) {
         reject(e);
@@ -2609,4 +2621,307 @@ export default class Allostasis<
       }
     });
   };
+
+  /*
+   ** Get or create chat
+   */
+
+  async getOrCreateChat(params: { profileID: string; recipientProfileID: string; channelID: string }): Promise<Chat> {
+    return new Promise(async (resolve, reject) => {
+        const chats = await this.composeClient.executeQuery<{
+          chatIndex: { edges: { node: Chat }[] };
+        }>(`
+          query {
+            chatIndex(
+              filters: { 
+                or: [
+                  { where: { isDeleted: { equalTo: false }, profileID: { equalTo: "${params.profileID}" }, recipientProfileID: { equalTo: "${params.recipientProfileID}" } } },
+                  { where: { isDeleted: { equalTo: false }, recipientProfileID: { equalTo: "${params.profileID}" }, profileID: { equalTo: "${params.recipientProfileID}" } } }
+                ]
+              },
+              first: 1
+            ) {
+              edges {
+                node {
+                  channelID
+                  createdAt
+                  id
+                  isDeleted
+                  messages(last: 1000) {
+                    edges {
+                      node {
+                        body
+                        createdAt
+                        encryptedSymmetricKey
+                        id
+                        messageType
+                        profile {
+                          id
+                          displayName
+                          avatar
+                          bio
+                          nakamaID
+                        }
+                        profileID
+                        unifiedAccessControlConditions
+                      }
+                    }
+                  }
+                  messagesCount
+                  profile {
+                    id
+                    displayName
+                    avatar
+                    bio
+                    nakamaID
+                  }
+                  recipientProfile {
+                    id
+                    displayName
+                    avatar
+                    bio
+                    nakamaID
+                  }  
+                }
+              }
+            }
+          }
+        `);
+
+        if (chats.errors != null && chats.errors.length > 0) {
+          reject(chats);
+        } else {
+          if (chats.data.chatIndex.edges.length > 0) {
+            const chat = chats.data.chatIndex.edges[0];
+
+            resolve({
+              ...chat.node,
+              messages: _.get(chat.node, 'messages.edges', []).map(
+                (x: { node: ChatMessage }) => x.node
+              )
+            });
+          } else {
+            const create = await this.composeClient.executeQuery<{
+              createChat: { document: Chat };
+            }>(`
+              mutation {
+                createChat(input: {
+                  content: {
+                    profileID: "${params.profileID}",
+                    recipientProfileID: "${params.recipientProfileID}",
+                    channelID: "${params.channelID}",
+                    isDeleted: false,
+                    createdAt: "${dayjs().toISOString()}",
+                  }
+                })
+                {
+                  document {
+                    channelID
+                    createdAt
+                    id
+                    isDeleted
+                    messages(last: 1000) {
+                      edges {
+                        node {
+                          body
+                          createdAt
+                          encryptedSymmetricKey
+                          id
+                          messageType
+                          profile {
+                            id
+                            displayName
+                            avatar
+                            bio
+                            nakamaID
+                          }
+                          profileID
+                          unifiedAccessControlConditions
+                        }
+                      }
+                    }
+                    messagesCount
+                    profile {
+                      id
+                      displayName
+                      avatar
+                      bio
+                      nakamaID
+                    }
+                    recipientProfile {
+                      id
+                      displayName
+                      avatar
+                      bio
+                      nakamaID
+                    }
+                  }
+                }
+              }
+            `);
+    
+            if (create.errors != null && create.errors.length > 0) {
+              reject(create);
+            } else {
+              resolve({
+                ...create.data.createChat.document,
+                messages: [],
+              });
+            }
+          }
+        }
+    });
+  }
+
+  /*
+   ** Get chats of user
+   */
+
+  async getChats(params: { profile: string; cursor: string }): Promise<{ chats:Chat[], cursor: string }> {
+    return new Promise((resolve, reject) => {
+      (async () => {
+        const chats = await this.composeClient.executeQuery<{
+          chatIndex: { edges: { node: Chat; cursor: string }[] };
+        }>(`
+          query {
+            chatIndex(
+              filters: { 
+                or: [
+                  { where: { isDeleted: { equalTo: false }, profileID: { equalTo: "${params.profile}" } } },
+                  { where: { isDeleted: { equalTo: false }, recipientProfileID: { equalTo: "${params.profile}" } } }
+                ]
+              },
+              first: 1,
+              after: "${params.cursor}"
+            ) {
+              edges {
+                node {
+                  channelID
+                  createdAt
+                  id
+                  isDeleted
+                  messages(last: 1000) {
+                    edges {
+                      node {
+                        body
+                        createdAt
+                        encryptedSymmetricKey
+                        id
+                        messageType
+                        profile {
+                          id
+                          displayName
+                          avatar
+                          bio
+                          nakamaID
+                        }
+                        profileID
+                        unifiedAccessControlConditions
+                      }
+                    }
+                  }
+                  messagesCount
+                  profile {
+                    id
+                    displayName
+                    avatar
+                    bio
+                    nakamaID
+                  }
+                  recipientProfile {
+                    id
+                    displayName
+                    avatar
+                    bio
+                    nakamaID
+                  }  
+                }
+                cursor
+              }
+            }
+          }
+        `);
+
+        if (chats.errors != null && chats.errors.length > 0) {
+          reject(chats);
+        } else {
+          if (chats.data.chatIndex.edges.length > 0) {
+            resolve({
+              chats: chats.data.chatIndex.edges.map((x) => {
+                return {
+                  ...x.node,
+                  messages: _.get(x.node, 'messages.edges', []).map(
+                    (x: { node: ChatMessage }) => x.node
+                  )
+                };
+              }),
+              cursor: chats.data?.chatIndex?.edges.at(-1)?.cursor ?? ''
+            });
+          } else {
+            resolve(null);
+          }
+        }
+      })();
+    });
+  }
+
+  /*
+   ** Send a message
+   */
+
+   async sendMessage(params: {
+    content: string;
+    chatID: string;
+    profileID: string;
+    unifiedAccessControlConditions: UnifiedAccessControlConditions;
+  }): Promise<ChatMessage> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const encryption = await this.encryptContent(params.content, params.unifiedAccessControlConditions);
+
+        const create = await this.composeClient.executeQuery<{
+          createChatMessage: { document: ChatMessage };
+        }>(`
+          mutation {
+            createChatMessage(input: {
+              content: {
+                body: "${encryption.encryptedString}",
+                unifiedAccessControlConditions: "${encryption.unifiedAccessControlConditions}",
+                encryptedSymmetricKey: "${encryption.encryptedSymmetricKey}",
+                profileID: "${params.profileID}",
+                chatID: "${params.chatID}",
+                createdAt: "${dayjs().toISOString()}",
+              }
+            })
+            {
+              document {
+                body
+                createdAt
+                encryptedSymmetricKey
+                id
+                messageType
+                profile {
+                  id
+                  displayName
+                  avatar
+                  bio
+                  nakamaID
+                }
+                profileID
+                unifiedAccessControlConditions
+              }
+            }
+          }
+        `);
+
+        if (create.errors != null && create.errors.length > 0) {
+          reject(create);
+        } else {
+          resolve(create.data.createChatMessage.document);
+        }
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
 }
