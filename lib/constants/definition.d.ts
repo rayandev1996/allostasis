@@ -263,18 +263,22 @@ export declare const definition: {
             channelID: {
                 type: string;
                 required: boolean;
+                indexed: boolean;
             };
             createdAt: {
                 type: string;
                 required: boolean;
+                indexed: boolean;
             };
             isDeleted: {
                 type: string;
                 required: boolean;
+                indexed: boolean;
             };
             profileID: {
                 type: string;
                 required: boolean;
+                indexed: boolean;
             };
             relationID: {
                 type: string;
@@ -283,6 +287,7 @@ export declare const definition: {
             recipientProfileID: {
                 type: string;
                 required: boolean;
+                indexed: boolean;
             };
             creator: {
                 type: string;
@@ -333,14 +338,17 @@ export declare const definition: {
             chatID: {
                 type: string;
                 required: boolean;
+                indexed: boolean;
             };
             createdAt: {
                 type: string;
                 required: boolean;
+                indexed: boolean;
             };
             profileID: {
                 type: string;
                 required: boolean;
+                indexed: boolean;
             };
             messageType: {
                 type: string;
