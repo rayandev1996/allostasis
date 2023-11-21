@@ -1,14 +1,14 @@
+import { UnifiedAccessControlConditions } from '@lit-protocol/types/src/lib/types';
 import { AllostasisConstructor, Chain, Communities, Profile, ProfileTypeBasedOnCommunities, Post, PostComment, Education, Experience } from './types/allostasis';
 import { CeramicClient } from '@ceramicnetwork/http-client';
 import { ComposeClient } from '@composedb/client';
 import { LitNodeClient } from '@lit-protocol/lit-node-client';
 import { Web3Provider } from '@ethersproject/providers';
 import { IPFSHTTPClient } from 'kubo-rpc-client';
-import { IUser, SignerType } from '@pushprotocol/restapi';
+import { Client, Session } from '@heroiclabs/nakama-js';
 export default class Allostasis<TCommunity extends keyof Communities = keyof Communities> {
     private community;
-    private nodeURL;
-    private connectPush;
+    nodeURL: string;
     provider: any;
     chain: Chain;
     ceramic: CeramicClient;
@@ -16,10 +16,10 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
     lit: LitNodeClient;
     ipfs: IPFSHTTPClient;
     ethersProvider: Web3Provider;
-    ethersSigner: SignerType;
     ethersAddress: string;
-    chatUser: IUser;
     pvtKey: any;
+    nakamaClient: Client;
+    nakamaSession: Session;
     constructor(community: TCommunity, options: AllostasisConstructor);
     connect(): Promise<{
         did: any;
@@ -73,7 +73,22 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
     }) => Promise<Education>;
     getProfile(): Promise<ProfileTypeBasedOnCommunities<TCommunity>>;
     getUserProfile(id: string): Promise<Profile>;
+    getUserProfiles(params: {
+        numberPerPage: number;
+        cursor: string;
+        search?: {
+            q?: string;
+        };
+    }): Promise<{
+        users: Profile[];
+        cursor: string;
+    }>;
     getCommunityUserProfile(id: string): Promise<ProfileTypeBasedOnCommunities<TCommunity>>;
+    encryptContent(content: string, unifiedAccessControlConditions: UnifiedAccessControlConditions): Promise<{
+        encryptedString: string;
+        encryptedSymmetricKey: string;
+        unifiedAccessControlConditions: string;
+    }>;
     decryptContent(content: string, unifiedAccessControlConditions: string, encryptedSymmetricKey: string): Promise<string>;
     createPost(params: {
         body: string;
@@ -97,6 +112,10 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
     getPosts(params: {
         numberPerPage: number;
         cursor: string;
+        search?: {
+            q?: string;
+            profiles?: string[];
+        };
     }): Promise<{
         posts: Post[];
         cursor: string;
@@ -108,6 +127,7 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
         content: string;
         postID: string;
         profileID: string;
+        replyingTo?: string;
     }) => Promise<PostComment | undefined>;
     likePost: (params: {
         postID: string;

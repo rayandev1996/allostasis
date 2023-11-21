@@ -1,3 +1,4 @@
+import { UnifiedAccessControlConditions } from '@lit-protocol/types/src/lib/types';
 import {
   AllostasisConstructor,
   Chain,
@@ -25,19 +26,17 @@ import { Web3Provider } from '@ethersproject/providers';
 import { ethConnect } from '@lit-protocol/auth-browser';
 import _ from 'lodash';
 import dayjs from 'dayjs';
-import { decodeB64, getAuthSig } from './utils/lit';
+import { blobToBase64, buf2hex, decodeB64, getAuthSig } from './utils/lit';
 import { create as createIPFS, IPFSHTTPClient } from 'kubo-rpc-client';
 import { ethers } from 'ethers';
-import * as PushAPI from '@pushprotocol/restapi';
-import { IUser, SignerType } from '@pushprotocol/restapi';
-import { ENV } from '@pushprotocol/restapi/src/lib/constants';
+import { Client, Session } from '@heroiclabs/nakama-js';
+import { v4 as uuidv4 } from 'uuid';
 
 export default class Allostasis<
   TCommunity extends keyof Communities = keyof Communities
 > {
   private community: TCommunity;
-  private nodeURL: string;
-  private connectPush: boolean;
+  public nodeURL: string;
   public provider: any;
   public chain: Chain;
   public ceramic: CeramicClient;
@@ -45,15 +44,14 @@ export default class Allostasis<
   public lit: LitNodeClient;
   public ipfs: IPFSHTTPClient;
   public ethersProvider: Web3Provider;
-  public ethersSigner: SignerType;
   public ethersAddress: string;
-  public chatUser: IUser;
   public pvtKey: any;
+  public nakamaClient: Client;
+  public nakamaSession: Session;
 
   constructor(community: TCommunity, options: AllostasisConstructor) {
     this.nodeURL = options.nodeURL;
     this.community = community;
-    this.connectPush = options.connectPush ?? true;
 
     if (options.chain) {
       this.chain = options.chain;
@@ -74,6 +72,15 @@ export default class Allostasis<
       this.provider = options.provider;
     }
 
+    if (options.nakama) {
+      this.nakamaClient = new Client(
+        options.nakama.key,
+        options.nakama.server,
+        options.nakama.port,
+        options.nakama.useSSL
+      );
+    }
+
     this.ceramic = new CeramicClient(options.nodeURL);
 
     this.composeClient = new ComposeClient({
@@ -86,18 +93,16 @@ export default class Allostasis<
       debug: false
     });
 
-    this.ipfs = createIPFS({
-      url: _.get(options, 'infura.url', ''),
-      headers: {
-        authorization:
-          'Basic ' +
-          btoa(
-            _.get(options, 'infura.projectId', '') +
-              ':' +
-              _.get(options, 'infura.apiKey', '')
-          )
-      }
-    });
+    if (options.infura) {
+      this.ipfs = createIPFS({
+        url: options.infura.url,
+        headers: {
+          authorization: `Basic ${btoa(
+            `${options.infura.projectId}:${options.infura.apiKey}`
+          )}`
+        }
+      });
+    }
 
     this.ethersProvider = new ethers.providers.Web3Provider(this.provider);
   }
@@ -113,24 +118,28 @@ export default class Allostasis<
         await this.lit.connect();
 
         try {
-          await this.provider.request({
-            method: 'wallet_addEthereumChain',
-            params: [
-              {
-                chainId: `0x${this.chain.id.toString(16)}`,
-                rpcUrls: [
-                  'https://rpc-mumbai.maticvigil.com/v1/96bf5fa6e03d272fbd09de48d03927b95633726c'
-                ],
-                chainName: 'Mumbai',
-                nativeCurrency: {
-                  name: 'MATIC',
-                  symbol: 'MATIC',
-                  decimals: 18
-                },
-                blockExplorerUrls: ['https://mumbai.polygonscan.com/']
-              }
-            ]
-          });
+          if (
+            this.chain.rpcURLs != null &&
+            this.chain.blockExplorerUrls != null &&
+            this.chain.currency != null
+          ) {
+            await this.provider.request({
+              method: 'wallet_addEthereumChain',
+              params: [
+                {
+                  chainId: `0x${this.chain.id.toString(16)}`,
+                  rpcUrls: this.chain.rpcURLs,
+                  chainName: this.chain.name,
+                  nativeCurrency: {
+                    name: this.chain.currency.name,
+                    symbol: this.chain.currency.symbol,
+                    decimals: this.chain.currency.decimals
+                  },
+                  blockExplorerUrls: this.chain.blockExplorerUrls
+                }
+              ]
+            });
+          }
 
           await this.provider.request({
             method: 'wallet_switchEthereumChain',
@@ -191,41 +200,15 @@ export default class Allostasis<
                 await this.ceramic.setDID(session.did);
                 this.composeClient.setDID(session.did);
 
-                this.ethersSigner = this.ethersProvider.getSigner();
                 this.ethersAddress = address;
 
-                console.log('Allostasis', 'Getting user');
-
-                if (this.connectPush) {
-                  const gotUser = await PushAPI.user.get({
-                    account: this.ethersAddress,
-                    env: ENV.STAGING
-                  });
-
-                  console.log('Allostasis', gotUser);
-
-                  if (gotUser) {
-                    this.chatUser = gotUser;
-                  } else {
-                    const createUser = await PushAPI.user.create({
-                      account: this.ethersAddress,
-                      env: ENV.STAGING
-                    });
-
-                    console.log('Allostasis', 'Creating user');
-                    console.log('Allostasis', createUser);
-
-                    this.chatUser = createUser;
-                  }
-
-                  this.pvtKey = await PushAPI.chat.decryptPGPKey({
-                    encryptedPGPPrivateKey: this.chatUser.encryptedPrivateKey,
-                    account: this.ethersAddress,
-                    signer: this.ethersSigner,
-                    env: ENV.STAGING,
-                    toUpgrade: true
-                  });
+                if (this.nakamaClient) {
+                  this.nakamaSession =
+                    await this.nakamaClient.authenticateCustom(
+                      session.did?.parent.split(':')[4] ?? uuidv4()
+                    );
                 }
+
                 resolve({ did: session.did.id, address: address ?? '' });
               })
               .catch((e) => {
@@ -302,39 +285,13 @@ export default class Allostasis<
               await this.ceramic.setDID(session.did);
               this.composeClient.setDID(session.did);
 
-              this.ethersSigner = this.ethersProvider.getSigner();
               this.ethersAddress = address;
 
-              console.log('Allostasis', 'Getting user');
-
-              const gotUser = await PushAPI.user.get({
-                account: this.ethersAddress,
-                env: ENV.STAGING
-              });
-
-              console.log('Allostasis', gotUser);
-
-              if (gotUser) {
-                this.chatUser = gotUser;
-              } else {
-                const createUser = await PushAPI.user.create({
-                  account: this.ethersAddress,
-                  env: ENV.STAGING
-                });
-
-                console.log('Allostasis', 'Creating user');
-                console.log('Allostasis', createUser);
-
-                this.chatUser = createUser;
+              if (this.nakamaClient) {
+                this.nakamaSession = await this.nakamaClient.authenticateCustom(
+                  session.did?.parent.split(':')[4] ?? uuidv4()
+                );
               }
-
-              this.pvtKey = await PushAPI.chat.decryptPGPKey({
-                encryptedPGPPrivateKey: this.chatUser.encryptedPrivateKey,
-                account: this.ethersAddress,
-                signer: this.ethersSigner,
-                env: ENV.STAGING,
-                toUpgrade: true
-              });
 
               resolve({ did: session.did.id, address: address ?? '' });
             })
@@ -383,7 +340,8 @@ export default class Allostasis<
                         x === 'gender' ||
                         x === 'phoneNumber' ||
                         x === 'address' ||
-                        x === 'socialLinks'
+                        x === 'socialLinks' ||
+                        x === 'nakamaID'
                     )
                     .map((key) => {
                       if (key === 'skills') {
@@ -416,6 +374,7 @@ export default class Allostasis<
                   phoneNumber
                   address
                   socialLinks
+                  nakamaID
                 }
               }
             }
@@ -428,7 +387,7 @@ export default class Allostasis<
               case 'greenia':
                 resolve({
                   ...create.data.createProfile.document,
-                  id: create.data.createProfile.document.id,
+                  id: create.data.createProfile.document.id
                 } as GreeniaProfile);
                 // const createGreenia = await this.composeClient.executeQuery<{
                 //   createGreeniaProfile: { document: GreeniaProfile };
@@ -744,6 +703,7 @@ export default class Allostasis<
                   phoneNumber
                   address
                   socialLinks
+                  nakamaID
                   experiences(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                     edges {
                       node {
@@ -781,7 +741,16 @@ export default class Allostasis<
                         isDeleted
                         isEncrypted
                         createdAt
-                        tags
+                        tag1
+                        tag2
+                        tag3
+                        tag4
+                        tag5
+                        tag6
+                        tag7
+                        tag8
+                        tag9
+                        tag10
                         attachment
                         externalURL
                         encryptedSymmetricKey
@@ -805,6 +774,14 @@ export default class Allostasis<
                           }
                         }
                         likesCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        profile {
+                          id
+                          avatar
+                          displayName
+                          postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                          followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                          followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        }
                       }
                     }
                   }
@@ -814,6 +791,7 @@ export default class Allostasis<
                       node {
                         id
                         isDeleted
+                        profileID
                         profile {
                           displayName
                           avatar
@@ -830,12 +808,105 @@ export default class Allostasis<
                       node {
                         id
                         isDeleted
+                        targetProfileID
                         targetProfile {
                           displayName
                           avatar
                           postsCount(filters: { where: { isDeleted: { equalTo: false } } })
                           followersCount(filters: { where: { isDeleted: { equalTo: false } } })
                           followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        }
+                      }
+                    }
+                  }
+                  chatsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                  chats(last: 1000, filters: { where: { isDeleted: { equalTo: false } } }) {
+                    edges {
+                      node {
+                        channelId
+                        createdAt
+                        id
+                        isDeleted
+                        messages(last: 1000) {
+                          edges {
+                            node {
+                              body
+                              createdAt
+                              encryptedSymmetricKey
+                              id
+                              messageType
+                              profile {
+                                id
+                                displayName
+                                avatar
+                                bio
+                                nakamaID
+                              }
+                              profileID
+                              unifiedAccessControlConditions
+                            }
+                          }
+                        }
+                        messagesCount
+                        profile {
+                          id
+                          displayName
+                          avatar
+                          bio
+                          nakamaID
+                        }
+                        recipientProfile {
+                          id
+                          displayName
+                          avatar
+                          bio
+                          nakamaID
+                        }
+                      }
+                    }
+                  }
+                  receivedChatsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                  receivedChats(last: 1000, filters: { where: { isDeleted: { equalTo: false } } }) {
+                    edges {
+                      node {
+                        channelId
+                        createdAt
+                        id
+                        isDeleted
+                        messages(last: 1000) {
+                          edges {
+                            node {
+                              body
+                              createdAt
+                              encryptedSymmetricKey
+                              id
+                              messageType
+                              profile {
+                                id
+                                displayName
+                                avatar
+                                bio
+                                nakamaID
+                              }
+                              profileID
+                              unifiedAccessControlConditions
+                            }
+                          }
+                        }
+                        messagesCount
+                        profile {
+                          id
+                          displayName
+                          avatar
+                          bio
+                          nakamaID
+                        }
+                        recipientProfile {
+                          id
+                          displayName
+                          avatar
+                          bio
+                          nakamaID
                         }
                       }
                     }
@@ -861,18 +932,80 @@ export default class Allostasis<
                   'experiences.edges',
                   []
                 ).map((i: { node: any }) => i.node),
+                followers: _.get(
+                  profile.data.viewer.profile,
+                  'followers.edges',
+                  []
+                ).map((i: { node: any }) => i.node),
+                followings: _.get(
+                  profile.data.viewer.profile,
+                  'followings.edges',
+                  []
+                ).map((i: { node: any }) => i.node),
+                chats: _.get(
+                  profile.data.viewer.profile,
+                  'chats.edges',
+                  []
+                ).map((i: { node: any }) => {
+                  return {
+                    ...i.node,
+                    messages: _.get(i.node, 'messages.edges', []).map(j => j.node),
+                  }
+                }),
+                receivedChats: _.get(
+                  profile.data.viewer.profile,
+                  'receivedChats.edges',
+                  []
+                ).map((i: { node: any }) => {
+                  return {
+                    ...i.node,
+                    messages: _.get(i.node, 'messages.edges', []).map(j => j.node),
+                  }
+                }),
                 posts: _.get(
                   profile.data.viewer.profile,
                   'posts.edges',
                   []
-                ).map((i: { node: any }) => i.node)
+                ).map((i: { node: any }) => {
+                  const {
+                    tag1,
+                    tag2,
+                    tag3,
+                    tag4,
+                    tag5,
+                    tag6,
+                    tag7,
+                    tag8,
+                    tag9,
+                    tag10,
+                    comments,
+                    ...other
+                  } = i.node;
+
+                  return {
+                    ...other,
+                    tags: [
+                      tag1,
+                      tag2,
+                      tag3,
+                      tag4,
+                      tag5,
+                      tag6,
+                      tag7,
+                      tag8,
+                      tag9,
+                      tag10
+                    ].filter((x) => x != null && x != ''),
+                    comments: _.get(comments, 'edges', []).map((j) => j.node)
+                  };
+                })
               };
 
               switch (this.community) {
                 case 'greenia':
                   resolve({
                     ...profileData,
-                    id: profileData.id,
+                    id: profileData.id
                   } as GreeniaProfile);
                   // const greeniaProfile = await this.composeClient.executeQuery<{
                   //   viewer: { greeniaProfile: GreeniaProfile };
@@ -945,6 +1078,7 @@ export default class Allostasis<
                 phoneNumber
                 address
                 socialLinks
+                nakamaID
                 experiences(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                   edges {
                     node {
@@ -982,7 +1116,16 @@ export default class Allostasis<
                       isDeleted
                       isEncrypted
                       createdAt
-                      tags
+                      tag1
+                      tag2
+                      tag3
+                      tag4
+                      tag5
+                      tag6
+                      tag7
+                      tag8
+                      tag9
+                      tag10
                       attachment
                       externalURL
                       encryptedSymmetricKey
@@ -1006,6 +1149,14 @@ export default class Allostasis<
                         }
                       }
                       likesCount(filters: { where: { isDeleted: { equalTo: false } } })
+                      profile {
+                        id
+                        avatar
+                        displayName
+                        postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                      }
                     }
                   }
                 }
@@ -1050,7 +1201,275 @@ export default class Allostasis<
           reject(profile);
         } else {
           resolve({
-            ...profile.data.node
+            ...profile.data.node,
+            educations: _.get(profile.data.node, 'educations.edges', []).map(
+              (i: { node: any }) => i.node
+            ),
+            experiences: _.get(profile.data.node, 'experiences.edges', []).map(
+              (i: { node: any }) => i.node
+            ),
+            followers: _.get(profile.data.node, 'followers.edges', []).map(
+              (i: { node: any }) => i.node
+            ),
+            followings: _.get(profile.data.node, 'followings.edges', []).map(
+              (i: { node: any }) => i.node
+            ),
+            posts: _.get(profile.data.node, 'posts.edges', []).map(
+              (i: { node: any }) => {
+                const {
+                  tag1,
+                  tag2,
+                  tag3,
+                  tag4,
+                  tag5,
+                  tag6,
+                  tag7,
+                  tag8,
+                  tag9,
+                  tag10,
+                  comments,
+                  ...other
+                } = i.node;
+
+                return {
+                  ...other,
+                  tags: [
+                    tag1,
+                    tag2,
+                    tag3,
+                    tag4,
+                    tag5,
+                    tag6,
+                    tag7,
+                    tag8,
+                    tag9,
+                    tag10
+                  ].filter((x) => x != null && x != ''),
+                  comments: _.get(comments, 'edges', []).map((j) => j.node)
+                };
+              }
+            )
+          });
+        }
+      })();
+    });
+  }
+
+  /*
+   ** Get profiles of users
+   */
+
+  async getUserProfiles(params: {
+    numberPerPage: number;
+    cursor: string;
+    search?: { q?: string };
+  }): Promise<{ users: Profile[]; cursor: string }> {
+    return new Promise((resolve, reject) => {
+      (async () => {
+        const profiles = await this.composeClient.executeQuery<{
+          profileIndex: { edges: { node: Profile; cursor: string }[] };
+        }>(`
+          query {
+            profileIndex(
+              ${
+                _.get(params, 'search.q', '') != ''
+                  ? `filters: { where: { displayName: { equalTo: "${params.search.q}" } } },`
+                  : ''
+              }
+              first: ${params.numberPerPage}, 
+              after: "${params.cursor}"
+            ) {
+              edges {
+                node {
+                  id
+                  displayName
+                  email
+                  avatar
+                  cover
+                  bio
+                  accountType
+                  age
+                  skills
+                  gender
+                  phoneNumber
+                  address
+                  socialLinks
+                  nakamaID
+                  experiences(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
+                    edges {
+                      node {
+                        id
+                        city
+                        title
+                        company
+                        endDate
+                        startDate
+                        description
+                        isDeleted
+                      }
+                    }
+                  }
+                  educations(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
+                    edges {
+                      node {
+                        id
+                        city
+                        title
+                        school
+                        endDate
+                        startDate
+                        description
+                        isDeleted
+                      }
+                    }
+                  }
+                  postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                  posts(filters: { where: { isDeleted: { equalTo: false } } }, sorting: { createdAt: DESC }, last: 1000) {
+                    edges {
+                      node {
+                        id
+                        body
+                        isDeleted
+                        isEncrypted
+                        createdAt
+                        tag1
+                        tag2
+                        tag3
+                        tag4
+                        tag5
+                        tag6
+                        tag7
+                        tag8
+                        tag9
+                        tag10
+                        attachment
+                        externalURL
+                        encryptedSymmetricKey
+                        unifiedAccessControlConditions
+                        commentsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        comments(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
+                          edges {
+                            node {
+                              id
+                              content
+                              replyingToID
+                              createdAt
+                              isDeleted
+                              profileID
+                              profile {
+                                id
+                                displayName
+                                avatar
+                              }
+                            }
+                          }
+                        }
+                        likesCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        profile {
+                          id
+                          avatar
+                          displayName
+                          postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                          followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                          followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        }
+                      }
+                    }
+                  }
+                  followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                  followers(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
+                    edges {
+                      node {
+                        id
+                        isDeleted
+                        profile {
+                          displayName
+                          avatar
+                          postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                          followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                          followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        }
+                      }
+                    }
+                  }
+                  followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                  followings(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
+                    edges {
+                      node {
+                        id
+                        isDeleted
+                        targetProfile {
+                          displayName
+                          avatar
+                          postsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                          followersCount(filters: { where: { isDeleted: { equalTo: false } } })
+                          followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
+                        }
+                      }
+                    }
+                  }
+                }
+                cursor
+              }
+            }
+          }
+        `);
+
+        if (profiles.errors != null && profiles.errors.length > 0) {
+          reject(profiles);
+        } else {
+          resolve({
+            users: profiles.data.profileIndex.edges.map((x) => ({
+              ...x.node,
+              educations: _.get(x.node, 'educations.edges', []).map(
+                (i: { node: any }) => i.node
+              ),
+              experiences: _.get(x.node, 'experiences.edges', []).map(
+                (i: { node: any }) => i.node
+              ),
+              followers: _.get(x.node, 'followers.edges', []).map(
+                (i: { node: any }) => i.node
+              ),
+              followings: _.get(x.node, 'followings.edges', []).map(
+                (i: { node: any }) => i.node
+              ),
+              posts: _.get(x.node, 'posts.edges', []).map(
+                (i: { node: any }) => {
+                  const {
+                    tag1,
+                    tag2,
+                    tag3,
+                    tag4,
+                    tag5,
+                    tag6,
+                    tag7,
+                    tag8,
+                    tag9,
+                    tag10,
+                    comments,
+                    ...other
+                  } = i.node;
+
+                  return {
+                    ...other,
+                    tags: [
+                      tag1,
+                      tag2,
+                      tag3,
+                      tag4,
+                      tag5,
+                      tag6,
+                      tag7,
+                      tag8,
+                      tag9,
+                      tag10
+                    ].filter((x) => x != null && x != ''),
+                    comments: _.get(comments, 'edges', []).map((j) => j.node)
+                  };
+                }
+              )
+            })),
+            cursor: profiles.data?.profileIndex?.edges.at(-1)?.cursor ?? ''
           });
         }
       })();
@@ -1102,6 +1521,42 @@ export default class Allostasis<
   }
 
   /*
+   ** Encrypt a content
+   */
+
+  async encryptContent(
+    content: string,
+    unifiedAccessControlConditions: UnifiedAccessControlConditions
+  ): Promise<{ encryptedString: string, encryptedSymmetricKey: string, unifiedAccessControlConditions: string }> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const store = new Store();
+
+        const { encryptedString, symmetricKey } = await LitJsSdk.encryptString(
+          content
+        );
+
+        const authSig = await getAuthSig(store);
+
+        const encryptedSymmetricKey = await this.lit.saveEncryptionKey({
+          unifiedAccessControlConditions,
+          symmetricKey,
+          authSig,
+          chain: `${this.chain.id}`,
+        });
+
+        resolve({ 
+          encryptedString: await blobToBase64(encryptedString), 
+          encryptedSymmetricKey: buf2hex(encryptedSymmetricKey),
+          unifiedAccessControlConditions: btoa(JSON.stringify(unifiedAccessControlConditions)),
+        });
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  /*
    ** Decrypt an encrypted content
    */
 
@@ -1110,30 +1565,34 @@ export default class Allostasis<
     unifiedAccessControlConditions: string,
     encryptedSymmetricKey: string
   ): Promise<string> {
-    return new Promise((resolve, reject) => {
-      (async () => {
-        try {
-          const store = new Store();
-          const authSig = await getAuthSig(store);
-          const decodedString = decodeB64(content);
-          const _access = JSON.parse(atob(unifiedAccessControlConditions));
-          const decryptedSymmetricKey = await this.lit.getEncryptionKey({
-            unifiedAccessControlConditions: _access,
-            toDecrypt: encryptedSymmetricKey,
-            chain: `${this.chain.id}`,
-            authSig
-          });
-          const _blob = new Blob([decodedString]);
-          const decryptedString = await LitJsSdk.decryptString(
-            _blob,
-            decryptedSymmetricKey
-          );
+    return new Promise(async (resolve, reject) => {
+      try {
+        const store = new Store();
 
-          resolve(decryptedString);
-        } catch (e) {
-          reject(e);
-        }
-      })();
+        const authSig = await getAuthSig(store);
+
+        const decodedString = decodeB64(content);
+
+        const _access = JSON.parse(atob(unifiedAccessControlConditions));
+
+        const decryptedSymmetricKey = await this.lit.getEncryptionKey({
+          unifiedAccessControlConditions: _access,
+          toDecrypt: encryptedSymmetricKey,
+          chain: `${this.chain.id}`,
+          authSig
+        });
+
+        const _blob = new Blob([decodedString]);
+
+        const decryptedString = await LitJsSdk.decryptString(
+          _blob,
+          decryptedSymmetricKey
+        );
+
+        resolve(decryptedString);
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 
@@ -1152,7 +1611,20 @@ export default class Allostasis<
     return new Promise(async (resolve, reject) => {
       try {
         const create = await this.composeClient.executeQuery<{
-          createPost: { document: Post };
+          createPost: {
+            document: Post & {
+              tag1: string;
+              tag2: string;
+              tag3: string;
+              tag4: string;
+              tag5: string;
+              tag6: string;
+              tag7: string;
+              tag8: string;
+              tag9: string;
+              tag10: string;
+            };
+          };
         }>(`
           mutation {
             createPost(input: {
@@ -1162,7 +1634,7 @@ export default class Allostasis<
                 attachment: "${params.attachment}",
                 externalURL: "${params.externalURL}",
                 isEncrypted: ${params.isEncrypted},
-                tags: [${params.tags.map((i) => `"${i}"`).join(',')}],
+                ${params.tags.map((x, i) => `tag${i + 1}: "${x}",`)}
                 createdAt: "${dayjs().toISOString()}",
                 isDeleted: false
               }
@@ -1175,7 +1647,16 @@ export default class Allostasis<
                 attachment
                 externalURL
                 isEncrypted
-                tags
+                tag1
+                tag2
+                tag3
+                tag4
+                tag5
+                tag6
+                tag7
+                tag8
+                tag9
+                tag10
                 createdAt
                 isDeleted
                 unifiedAccessControlConditions
@@ -1188,8 +1669,33 @@ export default class Allostasis<
         if (create.errors != null && create.errors.length > 0) {
           reject(create);
         } else {
+          const {
+            tag1,
+            tag2,
+            tag3,
+            tag4,
+            tag5,
+            tag6,
+            tag7,
+            tag8,
+            tag9,
+            tag10,
+            ...other
+          } = create.data.createPost.document;
           resolve({
-            ...create.data.createPost.document
+            ...other,
+            tags: [
+              tag1,
+              tag2,
+              tag3,
+              tag4,
+              tag5,
+              tag6,
+              tag7,
+              tag8,
+              tag9,
+              tag10
+            ].filter((x) => x != null && x != '')
           } as Post);
         }
       } catch (e) {
@@ -1216,7 +1722,20 @@ export default class Allostasis<
     return new Promise(async (resolve, reject) => {
       try {
         const update = await this.composeClient.executeQuery<{
-          updatePost: { document: Post };
+          updatePost: {
+            document: Post & {
+              tag1: string;
+              tag2: string;
+              tag3: string;
+              tag4: string;
+              tag5: string;
+              tag6: string;
+              tag7: string;
+              tag8: string;
+              tag9: string;
+              tag10: string;
+            };
+          };
         }>(`
           mutation {
             updatePost(input: {
@@ -1231,7 +1750,7 @@ export default class Allostasis<
                   params.unifiedAccessControlConditions
                 }",
                 encryptedSymmetricKey: "${params.encryptedSymmetricKey}",
-                tags: [${params.tags.map((i) => `"${i}"`).join(',')}],
+                ${params.tags.map((x, i) => `tag${i + 1}: "${x}",`)}
                 createdAt: "${dayjs().toISOString()}",
                 isDeleted: false
               }
@@ -1244,7 +1763,16 @@ export default class Allostasis<
                 attachment
                 externalURL
                 isEncrypted
-                tags
+                tag1
+                tag2
+                tag3
+                tag4
+                tag5
+                tag6
+                tag7
+                tag8
+                tag9
+                tag10
                 createdAt
                 isDeleted
                 unifiedAccessControlConditions
@@ -1257,8 +1785,34 @@ export default class Allostasis<
         if (update.errors != null && update.errors.length > 0) {
           reject(update);
         } else {
+          const {
+            tag1,
+            tag2,
+            tag3,
+            tag4,
+            tag5,
+            tag6,
+            tag7,
+            tag8,
+            tag9,
+            tag10,
+            ...other
+          } = update.data.updatePost.document;
+
           resolve({
-            ...update.data.updatePost.document
+            ...other,
+            tags: [
+              tag1,
+              tag2,
+              tag3,
+              tag4,
+              tag5,
+              tag6,
+              tag7,
+              tag8,
+              tag9,
+              tag10
+            ].filter((x) => x != null && x != '')
           } as Post);
         }
       } catch (e) {
@@ -1274,14 +1828,121 @@ export default class Allostasis<
   async getPosts(params: {
     numberPerPage: number;
     cursor: string;
+    search?: {
+      q?: string;
+      profiles?: string[];
+    };
   }): Promise<{ posts: Post[]; cursor: string }> {
     return new Promise(async (resolve, reject) => {
       try {
         const list = await this.composeClient.executeQuery<{
-          postIndex: { edges: { node: Post; cursor: string }[] };
+          postIndex: {
+            edges: {
+              node: Post & {
+                tag1: string;
+                tag2: string;
+                tag3: string;
+                tag4: string;
+                tag5: string;
+                tag6: string;
+                tag7: string;
+                tag8: string;
+                tag9: string;
+                tag10: string;
+              };
+              cursor: string;
+            }[];
+          };
         }>(`
           query {
             postIndex(
+              ${
+                _.get(params, 'search.q', '') != ''
+                  ? `filters: {
+                      or: [
+                        { where: { tag1: { equalTo: "${params.search.q}" ${
+                      params.search.profiles
+                        ? `, profileID: { in: [${params.search.profiles
+                            .map((x) => `"${x}"`)
+                            .join(',')}] }`
+                        : ''
+                    } } } },
+                        { where: { tag2: { equalTo: "${params.search.q}" ${
+                      params.search.profiles
+                        ? `, profileID: { in: [${params.search.profiles
+                            .map((x) => `"${x}"`)
+                            .join(',')}] }`
+                        : ''
+                    } } } },
+                        { where: { tag3: { equalTo: "${params.search.q}" ${
+                      params.search.profiles
+                        ? `, profileID: { in: [${params.search.profiles
+                            .map((x) => `"${x}"`)
+                            .join(',')}] }`
+                        : ''
+                    } } } },
+                        { where: { tag4: { equalTo: "${params.search.q}" ${
+                      params.search.profiles
+                        ? `, profileID: { in: [${params.search.profiles
+                            .map((x) => `"${x}"`)
+                            .join(',')}] }`
+                        : ''
+                    } } } },
+                        { where: { tag5: { equalTo: "${params.search.q}" ${
+                      params.search.profiles
+                        ? `, profileID: { in: [${params.search.profiles
+                            .map((x) => `"${x}"`)
+                            .join(',')}] }`
+                        : ''
+                    } } } },
+                        { where: { tag6: { equalTo: "${params.search.q}" ${
+                      params.search.profiles
+                        ? `, profileID: { in: [${params.search.profiles
+                            .map((x) => `"${x}"`)
+                            .join(',')}] }`
+                        : ''
+                    } } } },
+                        { where: { tag7: { equalTo: "${params.search.q}" ${
+                      params.search.profiles
+                        ? `, profileID: { in: [${params.search.profiles
+                            .map((x) => `"${x}"`)
+                            .join(',')}] }`
+                        : ''
+                    } } } },
+                        { where: { tag8: { equalTo: "${params.search.q}" ${
+                      params.search.profiles
+                        ? `, profileID: { in: [${params.search.profiles
+                            .map((x) => `"${x}"`)
+                            .join(',')}] }`
+                        : ''
+                    } } } },
+                        { where: { tag9: { equalTo: "${params.search.q}" ${
+                      params.search.profiles
+                        ? `, profileID: { in: [${params.search.profiles
+                            .map((x) => `"${x}"`)
+                            .join(',')}] }`
+                        : ''
+                    } } } },
+                        { where: { tag10: { equalTo: "${params.search.q}" ${
+                      params.search.profiles
+                        ? `, profileID: { in: [${params.search.profiles
+                            .map((x) => `"${x}"`)
+                            .join(',')}] }`
+                        : ''
+                    } } } }
+                      ]
+                    },`
+                  : ''
+              }
+              ${
+                _.get(params, 'search.profiles', []).length > 0
+                  ? `filters: {
+                      where: { profileID: { in: [${params.search.profiles
+                        .map((x) => `"${x}"`)
+                        .join(',')}] } }
+                    },`
+                  : ''
+              }
               sorting: { createdAt: DESC },
               first: ${params.numberPerPage}, 
               after: "${params.cursor}"
@@ -1294,7 +1955,16 @@ export default class Allostasis<
                   attachment
                   externalURL
                   isEncrypted
-                  tags
+                  tag1
+                  tag2
+                  tag3
+                  tag4
+                  tag5
+                  tag6
+                  tag7
+                  tag8
+                  tag9
+                  tag10
                   createdAt
                   isDeleted
                   unifiedAccessControlConditions
@@ -1303,6 +1973,8 @@ export default class Allostasis<
                     id
                     displayName
                     avatar
+                    nakamaID
+                    bio
                     postsCount(filters: { where: { isDeleted: { equalTo: false } } })
                     followersCount(filters: { where: { isDeleted: { equalTo: false } } })
                     followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -1321,6 +1993,8 @@ export default class Allostasis<
                           id
                           displayName
                           avatar
+                          nakamaID
+                          bio
                         }
                       }
                     }
@@ -1336,6 +2010,8 @@ export default class Allostasis<
                           id
                           displayName
                           avatar
+                          nakamaID
+                          bio
                         }
                       }
                     }
@@ -1351,15 +2027,45 @@ export default class Allostasis<
           reject(list);
         } else {
           resolve({
-            posts: list.data.postIndex.edges.map((x) => ({
-              ...x.node,
-              likes: _.get(x.node, 'likes.edges', []).map(
-                (x: { node: PostLike }) => x.node
-              ),
-              comments: _.get(x.node, 'comments.edges', []).map(
-                (x: { node: PostComment }) => x.node
-              )
-            })),
+            posts: list.data.postIndex.edges.map((x) => {
+              const {
+                tag1,
+                tag2,
+                tag3,
+                tag4,
+                tag5,
+                tag6,
+                tag7,
+                tag8,
+                tag9,
+                tag10,
+                likes,
+                comments,
+                ...other
+              } = x.node;
+
+              return {
+                ...other,
+                tags: [
+                  tag1,
+                  tag2,
+                  tag3,
+                  tag4,
+                  tag5,
+                  tag6,
+                  tag7,
+                  tag8,
+                  tag9,
+                  tag10
+                ].filter((x) => x != null && x != ''),
+                likes: _.get(likes, 'edges', []).map(
+                  (x: { node: PostLike }) => x.node
+                ),
+                comments: _.get(comments, 'edges', []).map(
+                  (x: { node: PostComment }) => x.node
+                )
+              };
+            }),
             cursor: list.data?.postIndex?.edges.at(-1)?.cursor ?? ''
           });
         }
@@ -1377,7 +2083,18 @@ export default class Allostasis<
     return new Promise(async (resolve, reject) => {
       try {
         const post = await this.composeClient.executeQuery<{
-          node: Post;
+          node: Post & {
+            tag1: string;
+            tag2: string;
+            tag3: string;
+            tag4: string;
+            tag5: string;
+            tag6: string;
+            tag7: string;
+            tag8: string;
+            tag9: string;
+            tag10: string;
+          };
         }>(`
           query {
             node(id: "${params.id}") {
@@ -1391,7 +2108,16 @@ export default class Allostasis<
                 attachment
                 externalURL
                 isEncrypted
-                tags
+                tag1
+                tag2
+                tag3
+                tag4
+                tag5
+                tag6
+                tag7
+                tag8
+                tag9
+                tag10
                 createdAt
                 isDeleted
                 unifiedAccessControlConditions
@@ -1400,6 +2126,8 @@ export default class Allostasis<
                   id
                   displayName
                   avatar
+                  nakamaID
+                  bio
                   postsCount(filters: { where: { isDeleted: { equalTo: false } } })
                   followersCount(filters: { where: { isDeleted: { equalTo: false } } })
                   followingsCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -1418,6 +2146,8 @@ export default class Allostasis<
                         id
                         displayName
                         avatar
+                        nakamaID
+                        bio
                       }
                     }
                   }
@@ -1433,6 +2163,8 @@ export default class Allostasis<
                         id
                         displayName
                         avatar
+                        nakamaID
+                        bio
                       }
                     }
                   }
@@ -1445,12 +2177,40 @@ export default class Allostasis<
         if (post.errors != null && post.errors.length > 0) {
           reject(post);
         } else {
+          const {
+            tag1,
+            tag2,
+            tag3,
+            tag4,
+            tag5,
+            tag6,
+            tag7,
+            tag8,
+            tag9,
+            tag10,
+            likes,
+            comments,
+            ...other
+          } = post.data.node;
+
           resolve({
-            ...post.data.node,
-            likes: _.get(post.data.node, 'likes.edges', []).map(
+            ...other,
+            tags: [
+              tag1,
+              tag2,
+              tag3,
+              tag4,
+              tag5,
+              tag6,
+              tag7,
+              tag8,
+              tag9,
+              tag10
+            ].filter((x) => x != null && x != ''),
+            likes: _.get(likes, 'edges', []).map(
               (x: { node: PostLike }) => x.node
             ),
-            comments: _.get(post.data.node, 'comments.edges', []).map(
+            comments: _.get(comments, 'edges', []).map(
               (x: { node: PostComment }) => x.node
             )
           });
@@ -1469,6 +2229,7 @@ export default class Allostasis<
     content: string;
     postID: string;
     profileID: string;
+    replyingTo?: string;
   }): Promise<PostComment | undefined> => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -1482,6 +2243,11 @@ export default class Allostasis<
                 postID: "${params.postID}",
                 profileID: "${params.profileID}",
                 createdAt: "${dayjs().toISOString()}",
+                ${
+                  params.replyingTo
+                    ? `replyingToID: "${params.replyingTo}",`
+                    : ''
+                }
                 isDeleted: false
               }
             }) 
@@ -1493,6 +2259,7 @@ export default class Allostasis<
                 postID
                 profileID
                 isDeleted
+                replyingToID
               }
             }
           }

@@ -18,19 +18,13 @@ export declare const definition: {
                 type: string;
             };
         };
-        Follow: {
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
         Experience: {
             id: string;
             accountRelation: {
                 type: string;
             };
         };
-        Asset: {
+        Post: {
             id: string;
             accountRelation: {
                 type: string;
@@ -42,7 +36,13 @@ export declare const definition: {
                 type: string;
             };
         };
-        Post: {
+        Asset: {
+            id: string;
+            accountRelation: {
+                type: string;
+            };
+        };
+        Follow: {
             id: string;
             accountRelation: {
                 type: string;
@@ -99,6 +99,10 @@ export declare const definition: {
                 indexed: boolean;
             };
             address: {
+                type: string;
+                required: boolean;
+            };
+            nakamaID: {
                 type: string;
                 required: boolean;
             };
@@ -256,6 +260,10 @@ export declare const definition: {
             };
         };
         Chat: {
+            channelId: {
+                type: string;
+                required: boolean;
+            };
             createdAt: {
                 type: string;
                 required: boolean;
@@ -369,7 +377,26 @@ export declare const definition: {
                 };
             };
         };
-        Follow: {
+        Experience: {
+            city: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            title: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            company: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            endDate: {
+                type: string;
+                required: boolean;
+            };
             isDeleted: {
                 type: string;
                 required: boolean;
@@ -380,7 +407,11 @@ export declare const definition: {
                 required: boolean;
                 indexed: boolean;
             };
-            targetProfileID: {
+            startDate: {
+                type: string;
+                required: boolean;
+            };
+            description: {
                 type: string;
                 required: boolean;
                 indexed: boolean;
@@ -398,7 +429,139 @@ export declare const definition: {
                     property: string;
                 };
             };
-            targetProfile: {
+        };
+        Post: {
+            body: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            tag1: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            tag2: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            tag3: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            tag4: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            tag5: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            tag6: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            tag7: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            tag8: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            tag9: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            tag10: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            createdAt: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            isDeleted: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            profileID: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            attachment: {
+                type: string;
+                required: boolean;
+            };
+            externalURL: {
+                type: string;
+                required: boolean;
+            };
+            isEncrypted: {
+                type: string;
+                required: boolean;
+            };
+            encryptedSymmetricKey: {
+                type: string;
+                required: boolean;
+            };
+            unifiedAccessControlConditions: {
+                type: string;
+                required: boolean;
+            };
+            creator: {
+                type: string;
+                viewType: string;
+            };
+            profile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            comments: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            commentsCount: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            likes: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            likesCount: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -408,7 +571,7 @@ export declare const definition: {
                 };
             };
         };
-        Experience: {
+        Education: {
             city: {
                 type: string;
                 required: boolean;
@@ -419,7 +582,7 @@ export declare const definition: {
                 required: boolean;
                 indexed: boolean;
             };
-            company: {
+            school: {
                 type: string;
                 required: boolean;
                 indexed: boolean;
@@ -512,26 +675,7 @@ export declare const definition: {
                 };
             };
         };
-        Education: {
-            city: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            title: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            school: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            endDate: {
-                type: string;
-                required: boolean;
-            };
+        Follow: {
             isDeleted: {
                 type: string;
                 required: boolean;
@@ -542,11 +686,7 @@ export declare const definition: {
                 required: boolean;
                 indexed: boolean;
             };
-            startDate: {
-                type: string;
-                required: boolean;
-            };
-            description: {
+            targetProfileID: {
                 type: string;
                 required: boolean;
                 indexed: boolean;
@@ -564,98 +704,7 @@ export declare const definition: {
                     property: string;
                 };
             };
-        };
-        Post: {
-            body: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            tags: {
-                type: string;
-                required: boolean;
-                item: {
-                    type: string;
-                    required: boolean;
-                };
-                indexed: boolean;
-            };
-            createdAt: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            isDeleted: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            attachment: {
-                type: string;
-                required: boolean;
-            };
-            externalURL: {
-                type: string;
-                required: boolean;
-            };
-            isEncrypted: {
-                type: string;
-                required: boolean;
-            };
-            encryptedSymmetricKey: {
-                type: string;
-                required: boolean;
-            };
-            unifiedAccessControlConditions: {
-                type: string;
-                required: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            comments: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            commentsCount: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            likes: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            likesCount: {
+            targetProfile: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -773,15 +822,11 @@ export declare const definition: {
             type: string;
             name: string;
         };
-        followList: {
-            type: string;
-            name: string;
-        };
         experienceList: {
             type: string;
             name: string;
         };
-        assetList: {
+        postList: {
             type: string;
             name: string;
         };
@@ -789,7 +834,11 @@ export declare const definition: {
             type: string;
             name: string;
         };
-        postList: {
+        assetList: {
+            type: string;
+            name: string;
+        };
+        followList: {
             type: string;
             name: string;
         };

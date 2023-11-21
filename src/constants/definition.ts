@@ -2,43 +2,43 @@
 export const definition = {
   models: {
     Profile: {
-      id: 'kjzl6hvfrbw6c91almmscleflucxa448d6o3w0vhjrlamut86clk1klt1roggh5',
+      id: 'kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m',
       accountRelation: { type: 'single' }
     },
     Chat: {
-      id: 'kjzl6hvfrbw6c70n8mr4oaig3v7ed9pc6g2kumfxt4ztgi5c21emkzv0oyzztvt',
+      id: 'kjzl6hvfrbw6c9v0mua8ym1y6mb4hrtymeu8patj2higr165zr987bf5iztpwd2',
       accountRelation: { type: 'list' }
     },
     ChatMessage: {
-      id: 'kjzl6hvfrbw6c8gkz81y6yrdyf2qj3i4yw0cl7y961irxs254ju69b9en5g5648',
-      accountRelation: { type: 'list' }
-    },
-    Follow: {
-      id: 'kjzl6hvfrbw6c66wxudmb4fsj1p5mvj1dzfibli8pq2vjioeo5ssdhcoj9uwdd6',
+      id: 'kjzl6hvfrbw6c72wf30hcoa7jzvlt0v62kwzsd9x4bunst46ynyx06yufjfx6pp',
       accountRelation: { type: 'list' }
     },
     Experience: {
-      id: 'kjzl6hvfrbw6c6jqsrqjoabwgp12o4pwyddtde8gak02fprcu2i8a50uw01qmef',
-      accountRelation: { type: 'list' }
-    },
-    Asset: {
-      id: 'kjzl6hvfrbw6c6mxh84xftz7ulxj26piqtq2pe2j6bzx9ynzhtc8dev9bogtxr2',
-      accountRelation: { type: 'list' }
-    },
-    Education: {
-      id: 'kjzl6hvfrbw6ca7y740l2ppn2gqa3ka23cpghzwuz019frak5xu2gsiyrcv1kw0',
+      id: 'kjzl6hvfrbw6canpk7j60s0nbkfa107qx6zwi8sadwwu48ejlf0e19frdh1wmm7',
       accountRelation: { type: 'list' }
     },
     Post: {
-      id: 'kjzl6hvfrbw6c7gawsfx6klrkhtogxuu56fy02qdr4gz9628dslq9nabr1cp30z',
+      id: 'kjzl6hvfrbw6c6bj8bo0m5cp2pmk4mm1qccfsdk1zwdmdaquoqxrq3cuw5gvs9n',
+      accountRelation: { type: 'list' }
+    },
+    Education: {
+      id: 'kjzl6hvfrbw6c75txxcu51vqzcmato84uzd23uvstuzh7lv671nqg1670gtj9wj',
+      accountRelation: { type: 'list' }
+    },
+    Asset: {
+      id: 'kjzl6hvfrbw6c57be4ouqj3kp1jmp3x1l3z69kjuk0ilemhke5pvcsrkthukl4a',
+      accountRelation: { type: 'list' }
+    },
+    Follow: {
+      id: 'kjzl6hvfrbw6c5oqar67kzai2rrhexb727ur49e2rvqsgcb9mzw1bpdx4nrix8b',
       accountRelation: { type: 'list' }
     },
     PostComment: {
-      id: 'kjzl6hvfrbw6c8dquh1yjxv80nh7v33t6ain69xh0nh5jgw4zh5aytpghvpgoy7',
+      id: 'kjzl6hvfrbw6c806ppwm0mhryxut55x12vi7ikts591kzhk8sevy132kpqxdtby',
       accountRelation: { type: 'list' }
     },
     PostLike: {
-      id: 'kjzl6hvfrbw6c67kuexu6mnntpfo5oue94sjw11dhko1m314w9jk4ik4o9zxwcg',
+      id: 'kjzl6hvfrbw6c7snil2khwtf3y7i0o4okjdsgk0keq2saleldgq1w933d484whu',
       accountRelation: { type: 'list' }
     }
   },
@@ -57,6 +57,7 @@ export const definition = {
         indexed: true
       },
       address: { type: 'string', required: false },
+      nakamaID: { type: 'string', required: false },
       accountType: { type: 'string', required: false, indexed: true },
       displayName: { type: 'string', required: false, indexed: true },
       phoneNumber: { type: 'string', required: false },
@@ -72,7 +73,7 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6c70n8mr4oaig3v7ed9pc6g2kumfxt4ztgi5c21emkzv0oyzztvt',
+            'kjzl6hvfrbw6c9v0mua8ym1y6mb4hrtymeu8patj2higr165zr987bf5iztpwd2',
           property: 'profileID'
         }
       },
@@ -82,7 +83,7 @@ export const definition = {
         relation: {
           source: 'queryCount',
           model:
-            'kjzl6hvfrbw6c70n8mr4oaig3v7ed9pc6g2kumfxt4ztgi5c21emkzv0oyzztvt',
+            'kjzl6hvfrbw6c9v0mua8ym1y6mb4hrtymeu8patj2higr165zr987bf5iztpwd2',
           property: 'profileID'
         }
       },
@@ -92,7 +93,7 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6c70n8mr4oaig3v7ed9pc6g2kumfxt4ztgi5c21emkzv0oyzztvt',
+            'kjzl6hvfrbw6c9v0mua8ym1y6mb4hrtymeu8patj2higr165zr987bf5iztpwd2',
           property: 'recipientProfileID'
         }
       },
@@ -102,7 +103,7 @@ export const definition = {
         relation: {
           source: 'queryCount',
           model:
-            'kjzl6hvfrbw6c70n8mr4oaig3v7ed9pc6g2kumfxt4ztgi5c21emkzv0oyzztvt',
+            'kjzl6hvfrbw6c9v0mua8ym1y6mb4hrtymeu8patj2higr165zr987bf5iztpwd2',
           property: 'recipientProfileID'
         }
       },
@@ -112,7 +113,7 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6c6jqsrqjoabwgp12o4pwyddtde8gak02fprcu2i8a50uw01qmef',
+            'kjzl6hvfrbw6canpk7j60s0nbkfa107qx6zwi8sadwwu48ejlf0e19frdh1wmm7',
           property: 'profileID'
         }
       },
@@ -122,7 +123,7 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6ca7y740l2ppn2gqa3ka23cpghzwuz019frak5xu2gsiyrcv1kw0',
+            'kjzl6hvfrbw6c75txxcu51vqzcmato84uzd23uvstuzh7lv671nqg1670gtj9wj',
           property: 'profileID'
         }
       },
@@ -132,7 +133,7 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6c66wxudmb4fsj1p5mvj1dzfibli8pq2vjioeo5ssdhcoj9uwdd6',
+            'kjzl6hvfrbw6c5oqar67kzai2rrhexb727ur49e2rvqsgcb9mzw1bpdx4nrix8b',
           property: 'profileID'
         }
       },
@@ -142,7 +143,7 @@ export const definition = {
         relation: {
           source: 'queryCount',
           model:
-            'kjzl6hvfrbw6c66wxudmb4fsj1p5mvj1dzfibli8pq2vjioeo5ssdhcoj9uwdd6',
+            'kjzl6hvfrbw6c5oqar67kzai2rrhexb727ur49e2rvqsgcb9mzw1bpdx4nrix8b',
           property: 'profileID'
         }
       },
@@ -152,7 +153,7 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6c66wxudmb4fsj1p5mvj1dzfibli8pq2vjioeo5ssdhcoj9uwdd6',
+            'kjzl6hvfrbw6c5oqar67kzai2rrhexb727ur49e2rvqsgcb9mzw1bpdx4nrix8b',
           property: 'targetProfileID'
         }
       },
@@ -162,7 +163,7 @@ export const definition = {
         relation: {
           source: 'queryCount',
           model:
-            'kjzl6hvfrbw6c66wxudmb4fsj1p5mvj1dzfibli8pq2vjioeo5ssdhcoj9uwdd6',
+            'kjzl6hvfrbw6c5oqar67kzai2rrhexb727ur49e2rvqsgcb9mzw1bpdx4nrix8b',
           property: 'targetProfileID'
         }
       },
@@ -172,7 +173,7 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6c7gawsfx6klrkhtogxuu56fy02qdr4gz9628dslq9nabr1cp30z',
+            'kjzl6hvfrbw6c6bj8bo0m5cp2pmk4mm1qccfsdk1zwdmdaquoqxrq3cuw5gvs9n',
           property: 'profileID'
         }
       },
@@ -182,7 +183,7 @@ export const definition = {
         relation: {
           source: 'queryCount',
           model:
-            'kjzl6hvfrbw6c7gawsfx6klrkhtogxuu56fy02qdr4gz9628dslq9nabr1cp30z',
+            'kjzl6hvfrbw6c6bj8bo0m5cp2pmk4mm1qccfsdk1zwdmdaquoqxrq3cuw5gvs9n',
           property: 'profileID'
         }
       },
@@ -192,7 +193,7 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6c6mxh84xftz7ulxj26piqtq2pe2j6bzx9ynzhtc8dev9bogtxr2',
+            'kjzl6hvfrbw6c57be4ouqj3kp1jmp3x1l3z69kjuk0ilemhke5pvcsrkthukl4a',
           property: 'profileID'
         }
       },
@@ -202,12 +203,13 @@ export const definition = {
         relation: {
           source: 'queryCount',
           model:
-            'kjzl6hvfrbw6c6mxh84xftz7ulxj26piqtq2pe2j6bzx9ynzhtc8dev9bogtxr2',
+            'kjzl6hvfrbw6c57be4ouqj3kp1jmp3x1l3z69kjuk0ilemhke5pvcsrkthukl4a',
           property: 'profileID'
         }
       }
     },
     Chat: {
+      channelId: { type: 'string', required: false },
       createdAt: { type: 'datetime', required: true },
       isDeleted: { type: 'boolean', required: true },
       profileID: { type: 'streamid', required: true },
@@ -220,7 +222,7 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c91almmscleflucxa448d6o3w0vhjrlamut86clk1klt1roggh5',
+            'kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m',
           property: 'profileID'
         }
       },
@@ -230,7 +232,7 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c91almmscleflucxa448d6o3w0vhjrlamut86clk1klt1roggh5',
+            'kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m',
           property: 'recipientProfileID'
         }
       },
@@ -240,7 +242,7 @@ export const definition = {
         relation: {
           source: 'queryConnection',
           model:
-            'kjzl6hvfrbw6c8gkz81y6yrdyf2qj3i4yw0cl7y961irxs254ju69b9en5g5648',
+            'kjzl6hvfrbw6c72wf30hcoa7jzvlt0v62kwzsd9x4bunst46ynyx06yufjfx6pp',
           property: 'chatID'
         }
       },
@@ -250,7 +252,7 @@ export const definition = {
         relation: {
           source: 'queryCount',
           model:
-            'kjzl6hvfrbw6c8gkz81y6yrdyf2qj3i4yw0cl7y961irxs254ju69b9en5g5648',
+            'kjzl6hvfrbw6c72wf30hcoa7jzvlt0v62kwzsd9x4bunst46ynyx06yufjfx6pp',
           property: 'chatID'
         }
       }
@@ -269,7 +271,7 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c70n8mr4oaig3v7ed9pc6g2kumfxt4ztgi5c21emkzv0oyzztvt',
+            'kjzl6hvfrbw6c9v0mua8ym1y6mb4hrtymeu8patj2higr165zr987bf5iztpwd2',
           property: 'chatID'
         }
       },
@@ -280,34 +282,8 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c91almmscleflucxa448d6o3w0vhjrlamut86clk1klt1roggh5',
+            'kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m',
           property: 'profileID'
-        }
-      }
-    },
-    Follow: {
-      isDeleted: { type: 'boolean', required: true, indexed: true },
-      profileID: { type: 'streamid', required: true, indexed: true },
-      targetProfileID: { type: 'streamid', required: true, indexed: true },
-      creator: { type: 'view', viewType: 'documentAccount' },
-      profile: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'document',
-          model:
-            'kjzl6hvfrbw6c91almmscleflucxa448d6o3w0vhjrlamut86clk1klt1roggh5',
-          property: 'profileID'
-        }
-      },
-      targetProfile: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'document',
-          model:
-            'kjzl6hvfrbw6c91almmscleflucxa448d6o3w0vhjrlamut86clk1klt1roggh5',
-          property: 'targetProfileID'
         }
       }
     },
@@ -327,7 +303,100 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c91almmscleflucxa448d6o3w0vhjrlamut86clk1klt1roggh5',
+            'kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m',
+          property: 'profileID'
+        }
+      }
+    },
+    Post: {
+      body: { type: 'string', required: true, indexed: true },
+      tag1: { type: 'string', required: false, indexed: true },
+      tag2: { type: 'string', required: false, indexed: true },
+      tag3: { type: 'string', required: false, indexed: true },
+      tag4: { type: 'string', required: false, indexed: true },
+      tag5: { type: 'string', required: false, indexed: true },
+      tag6: { type: 'string', required: false, indexed: true },
+      tag7: { type: 'string', required: false, indexed: true },
+      tag8: { type: 'string', required: false, indexed: true },
+      tag9: { type: 'string', required: false, indexed: true },
+      tag10: { type: 'string', required: false, indexed: true },
+      createdAt: { type: 'datetime', required: true, indexed: true },
+      isDeleted: { type: 'boolean', required: true, indexed: true },
+      profileID: { type: 'streamid', required: true, indexed: true },
+      attachment: { type: 'string', required: false },
+      externalURL: { type: 'string', required: false },
+      isEncrypted: { type: 'boolean', required: true },
+      encryptedSymmetricKey: { type: 'string', required: false },
+      unifiedAccessControlConditions: { type: 'string', required: false },
+      creator: { type: 'view', viewType: 'documentAccount' },
+      profile: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'document',
+          model:
+            'kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m',
+          property: 'profileID'
+        }
+      },
+      comments: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryConnection',
+          model:
+            'kjzl6hvfrbw6c806ppwm0mhryxut55x12vi7ikts591kzhk8sevy132kpqxdtby',
+          property: 'postID'
+        }
+      },
+      commentsCount: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryCount',
+          model:
+            'kjzl6hvfrbw6c806ppwm0mhryxut55x12vi7ikts591kzhk8sevy132kpqxdtby',
+          property: 'postID'
+        }
+      },
+      likes: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryConnection',
+          model:
+            'kjzl6hvfrbw6c7snil2khwtf3y7i0o4okjdsgk0keq2saleldgq1w933d484whu',
+          property: 'postID'
+        }
+      },
+      likesCount: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'queryCount',
+          model:
+            'kjzl6hvfrbw6c7snil2khwtf3y7i0o4okjdsgk0keq2saleldgq1w933d484whu',
+          property: 'postID'
+        }
+      }
+    },
+    Education: {
+      city: { type: 'string', required: true, indexed: true },
+      title: { type: 'string', required: true, indexed: true },
+      school: { type: 'string', required: true, indexed: true },
+      endDate: { type: 'date', required: false },
+      isDeleted: { type: 'boolean', required: true, indexed: true },
+      profileID: { type: 'streamid', required: true, indexed: true },
+      startDate: { type: 'date', required: true },
+      description: { type: 'string', required: true, indexed: true },
+      creator: { type: 'view', viewType: 'documentAccount' },
+      profile: {
+        type: 'view',
+        viewType: 'relation',
+        relation: {
+          source: 'document',
+          model:
+            'kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m',
           property: 'profileID'
         }
       }
@@ -352,20 +421,15 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c91almmscleflucxa448d6o3w0vhjrlamut86clk1klt1roggh5',
+            'kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m',
           property: 'profileID'
         }
       }
     },
-    Education: {
-      city: { type: 'string', required: true, indexed: true },
-      title: { type: 'string', required: true, indexed: true },
-      school: { type: 'string', required: true, indexed: true },
-      endDate: { type: 'date', required: false },
+    Follow: {
       isDeleted: { type: 'boolean', required: true, indexed: true },
       profileID: { type: 'streamid', required: true, indexed: true },
-      startDate: { type: 'date', required: true },
-      description: { type: 'string', required: true, indexed: true },
+      targetProfileID: { type: 'streamid', required: true, indexed: true },
       creator: { type: 'view', viewType: 'documentAccount' },
       profile: {
         type: 'view',
@@ -373,76 +437,18 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c91almmscleflucxa448d6o3w0vhjrlamut86clk1klt1roggh5',
+            'kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m',
           property: 'profileID'
         }
-      }
-    },
-    Post: {
-      body: { type: 'string', required: true, indexed: true },
-      tags: {
-        type: 'list',
-        required: false,
-        item: { type: 'string', required: false },
-        indexed: true
       },
-      createdAt: { type: 'datetime', required: true, indexed: true },
-      isDeleted: { type: 'boolean', required: true, indexed: true },
-      profileID: { type: 'streamid', required: true, indexed: true },
-      attachment: { type: 'string', required: false },
-      externalURL: { type: 'string', required: false },
-      isEncrypted: { type: 'boolean', required: true },
-      encryptedSymmetricKey: { type: 'string', required: false },
-      unifiedAccessControlConditions: { type: 'string', required: false },
-      creator: { type: 'view', viewType: 'documentAccount' },
-      profile: {
+      targetProfile: {
         type: 'view',
         viewType: 'relation',
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c91almmscleflucxa448d6o3w0vhjrlamut86clk1klt1roggh5',
-          property: 'profileID'
-        }
-      },
-      comments: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryConnection',
-          model:
-            'kjzl6hvfrbw6c8dquh1yjxv80nh7v33t6ain69xh0nh5jgw4zh5aytpghvpgoy7',
-          property: 'postID'
-        }
-      },
-      commentsCount: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryCount',
-          model:
-            'kjzl6hvfrbw6c8dquh1yjxv80nh7v33t6ain69xh0nh5jgw4zh5aytpghvpgoy7',
-          property: 'postID'
-        }
-      },
-      likes: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryConnection',
-          model:
-            'kjzl6hvfrbw6c67kuexu6mnntpfo5oue94sjw11dhko1m314w9jk4ik4o9zxwcg',
-          property: 'postID'
-        }
-      },
-      likesCount: {
-        type: 'view',
-        viewType: 'relation',
-        relation: {
-          source: 'queryCount',
-          model:
-            'kjzl6hvfrbw6c67kuexu6mnntpfo5oue94sjw11dhko1m314w9jk4ik4o9zxwcg',
-          property: 'postID'
+            'kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m',
+          property: 'targetProfileID'
         }
       }
     },
@@ -459,7 +465,7 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c7gawsfx6klrkhtogxuu56fy02qdr4gz9628dslq9nabr1cp30z',
+            'kjzl6hvfrbw6c6bj8bo0m5cp2pmk4mm1qccfsdk1zwdmdaquoqxrq3cuw5gvs9n',
           property: 'postID'
         }
       },
@@ -470,7 +476,7 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c91almmscleflucxa448d6o3w0vhjrlamut86clk1klt1roggh5',
+            'kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m',
           property: 'profileID'
         }
       }
@@ -485,7 +491,7 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c7gawsfx6klrkhtogxuu56fy02qdr4gz9628dslq9nabr1cp30z',
+            'kjzl6hvfrbw6c6bj8bo0m5cp2pmk4mm1qccfsdk1zwdmdaquoqxrq3cuw5gvs9n',
           property: 'postID'
         }
       },
@@ -496,7 +502,7 @@ export const definition = {
         relation: {
           source: 'document',
           model:
-            'kjzl6hvfrbw6c91almmscleflucxa448d6o3w0vhjrlamut86clk1klt1roggh5',
+            'kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m',
           property: 'profileID'
         }
       }
@@ -507,11 +513,11 @@ export const definition = {
     profile: { type: 'node', name: 'Profile' },
     chatList: { type: 'connection', name: 'Chat' },
     chatMessageList: { type: 'connection', name: 'ChatMessage' },
-    followList: { type: 'connection', name: 'Follow' },
     experienceList: { type: 'connection', name: 'Experience' },
-    assetList: { type: 'connection', name: 'Asset' },
-    educationList: { type: 'connection', name: 'Education' },
     postList: { type: 'connection', name: 'Post' },
+    educationList: { type: 'connection', name: 'Education' },
+    assetList: { type: 'connection', name: 'Asset' },
+    followList: { type: 'connection', name: 'Follow' },
     postCommentList: { type: 'connection', name: 'PostComment' },
     postLikeList: { type: 'connection', name: 'PostLike' }
   }

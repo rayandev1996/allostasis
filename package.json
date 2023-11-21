@@ -1,6 +1,6 @@
 {
   "name": "allostasis-js-sdk",
-  "version": "1.0.87",
+  "version": "1.1.1",
   "description": "Allostasis data management",
   "main": "index.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "DAO",
     "JS-SDK"
   ],
-  "author": "Rayan",
+  "author": "Ryan",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/rayandev1996/allostasis/issues"
@@ -31,14 +31,15 @@
     "@composedb/types": "^0.5.1",
     "@didtools/pkh-ethereum": "^0.4.0",
     "@ethersproject/providers": "^5.7.2",
+    "@heroiclabs/nakama-js": "^2.7.1",
     "@lit-protocol/lit-node-client": "^2.2.47",
-    "@pushprotocol/restapi": "^1.4.19",
     "blob-to-buffer": "^1.2.9",
     "dayjs": "^1.11.9",
     "did-session": "^2.0.1",
     "ethers": "^5.7.2",
     "ipfs-http-client": "^60.0.0",
     "kubo-rpc-client": "^3.0.1",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "uuid": "^9.0.1"
   }
 }

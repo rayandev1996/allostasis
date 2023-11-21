@@ -11,17 +11,29 @@ export interface AllostasisConstructor {
   nodeURL: string;
   provider?: any;
   chain?: Chain;
-  infura: {
-    url?: string;
+  infura?: {
+    url: string;
     projectId: string;
     apiKey: string
   }
-  connectPush?: boolean;
+  nakama?: {
+    server: string;
+    port: string;
+    key: string;
+    useSSL: boolean;
+  }
 }
 
 export interface Chain {
   name: string;
   id: number | string;
+  rpcURLs?: string[];
+  blockExplorerUrls?: string[];
+  currency?: {
+    name: string;
+    symbol: string;
+    decimals: number;
+  }
 }
 
 export type Communities = {
@@ -59,6 +71,7 @@ export interface Profile {
   followingsCount?: number;
   followers?: Follow[];
   followersCount?: number;
+  nakamaID?: string;
 }
 
 export enum AccountType {
@@ -73,37 +86,43 @@ export enum Gender {
 }
 
 export interface Chat {
-  chatId?: string;
-  about?: string;
-  did?: string;
-  intent?: string;
-  intentSentBy?: string;
-  intentTimestamp?: string;
-  publicKey?: string;
-  profilePicture?: string;
-  threadhash?: string;
-  wallets?: string;
-  combinedDID?: string;
-  name?: string;
-  groupInformation?: string;
-  msg?: ChatMessage;
+  channelId?: string;
+  createdAt?: string;
+  id?: string;
+  isDeleted?: boolean;
+  messagesCount?: number;
+  profile?: {
+    id?: string;
+    displayName?: string;
+    avatar?: string;
+    bio?: string;
+    nakamaID?: string;
+  };
+  recipientProfile?: {
+    id?: string;
+    displayName?: string;
+    avatar?: string;
+    bio?: string;
+    nakamaID?: string;
+  };
+  messages?: ChatMessage[];
 }
 
 export interface ChatMessage {
-  fromDID?: string;
-  toDID?: string;
-  messageObj?: {};
-  messageContent?: string;
+  body?: string;
+  createdAt?: string;
+  encryptedSymmetricKey?: string;
+  id?: string;
   messageType?: string;
-  timestamp?: number;
-  fromCAIP10?: string;
-  toCAIP10?: string;
-  encryptedSecret?: string;
-  encType?: string;
-  signature?: string;
-  sigType?: string;
-  verificationProof?: string;
-  link?: string;
+  profileID?: string;
+  unifiedAccessControlConditions?: string;
+  profile?: {
+    id?: string;
+    displayName?: string;
+    avatar?: string;
+    bio?: string;
+    nakamaID?: string;
+  };
 }
 
 export interface Education {
