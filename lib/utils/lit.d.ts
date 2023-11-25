@@ -1,7 +1,7 @@
 import { Chain } from '../types/allostasis';
 import { LitNodeClient } from '@lit-protocol/lit-node-client';
 import { UnifiedAccessControlConditions } from '@lit-protocol/types/src/lib/types';
-import { Store } from "./store";
+import { Store } from './store';
 export declare function encryptString(content: string, unifiedAccessControlConditions: UnifiedAccessControlConditions, chain: Chain, lit: LitNodeClient): Promise<{
     encryptedContent: string;
     encryptedSymmetricKey: string;

@@ -92,7 +92,7 @@ export default class Allostasis<
 
     this.lit = new LitJsSdk.LitNodeClient({
       alertWhenUnauthorized: false,
-      debug: false
+      debug: options.debugLit ?? false
     });
 
     if (options.infura) {
@@ -114,171 +114,85 @@ export default class Allostasis<
    */
 
   async connect(): Promise<{ did: any; address: string }> {
-    return new Promise((resolve, reject) => {
-      (async () => {
-        const store = new Store();
-        await this.lit.connect();
+    return new Promise(async (resolve, reject) => {
+      const store = new Store();
+      await this.lit.connect();
 
-        try {
-          if (
-            this.chain.rpcURLs != null &&
-            this.chain.blockExplorerUrls != null &&
-            this.chain.currency != null
-          ) {
-            await this.provider.request({
-              method: 'wallet_addEthereumChain',
-              params: [
-                {
-                  chainId: `0x${this.chain.id.toString(16)}`,
-                  rpcUrls: this.chain.rpcURLs,
-                  chainName: this.chain.name,
-                  nativeCurrency: {
-                    name: this.chain.currency.name,
-                    symbol: this.chain.currency.symbol,
-                    decimals: this.chain.currency.decimals
-                  },
-                  blockExplorerUrls: this.chain.blockExplorerUrls
-                }
-              ]
-            });
-          }
-
+      try {
+        if (
+          this.chain.rpcURLs != null &&
+          this.chain.blockExplorerUrls != null &&
+          this.chain.currency != null
+        ) {
           await this.provider.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: `0x${this.chain.id.toString(16)}` }]
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: `0x${this.chain.id.toString(16)}`,
+                rpcUrls: this.chain.rpcURLs,
+                chainName: this.chain.name,
+                nativeCurrency: {
+                  name: this.chain.currency.name,
+                  symbol: this.chain.currency.symbol,
+                  decimals: this.chain.currency.decimals
+                },
+                blockExplorerUrls: this.chain.blockExplorerUrls
+              }
+            ]
+          });
+        }
+
+        await this.provider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: `0x${this.chain.id.toString(16)}` }]
+        });
+
+        const { authMethod, address } = await getAuthMethod(
+          this.provider,
+          this.chain
+        );
+
+        if (authMethod != null) {
+          const session = await DIDSession.authorize(authMethod, {
+            resources: this.composeClient.resources
           });
 
-          const { authMethod, address } = await getAuthMethod(
-            this.provider,
-            this.chain
-          );
-
-          if (authMethod != null) {
-            const session = await DIDSession.authorize(authMethod, {
-              resources: this.composeClient.resources
-            });
-
-            const sessionString = session.serialize();
-            await store.setItem('ceramic-session', sessionString);
-
-            const _userAuthSig = await store.getItem(
-              'lit-auth-signature-' + address
-            );
-            if (_userAuthSig) {
-              await store.setItem('lit-auth-signature', _userAuthSig);
-            }
-
-            if (
-              !_userAuthSig ||
-              _userAuthSig == '' ||
-              _userAuthSig == undefined
-            ) {
-              const web3 = new Web3Provider(this.provider);
-              const { chainId } = await web3.getNetwork();
-
-              await ethConnect.signAndSaveAuthMessage({
-                web3,
-                account: address,
-                chainId,
-                resources: null,
-                expiration: new Date(
-                  Date.now() + 1000 * 60 * 60 * 24
-                ).toISOString()
-              });
-
-              const _authSig = await store.getItem('lit-auth-signature');
-              const authSig = JSON.parse(_authSig ?? '');
-              if (authSig && authSig != '') {
-                await store.setItem(
-                  'lit-auth-signature-' + address,
-                  JSON.stringify(authSig)
-                );
-              }
-            }
-
-            this.ethersProvider
-              .send('eth_requestAccounts', [])
-              .then(async () => {
-                await this.ceramic.setDID(session.did);
-                this.composeClient.setDID(session.did);
-
-                this.ethersAddress = address;
-
-                if (this.nakamaClient) {
-                  this.nakamaSession =
-                    await this.nakamaClient.authenticateCustom(
-                      session.did?.parent.split(':')[4] ?? uuidv4()
-                    );
-                }
-
-                resolve({ did: session.did.id, address: address ?? '' });
-              })
-              .catch((e) => {
-                store.removeItem('ceramic-session');
-                store.removeItem('lit-auth-signature-' + address);
-                store.removeItem('lit-auth-signature');
-
-                reject(e);
-              });
-          } else {
-            reject('Getting auth method failed');
-          }
-        } catch (e) {
-          reject(e);
-        }
-      })();
-    });
-  }
-
-  /*
-   ** Disconnect the user
-   */
-
-  async disconnect(address?: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      (async () => {
-        const store = new Store();
-
-        try {
-          await store.removeItem('ceramic-session');
-          await store.removeItem('ceramic:auth_type');
-          await store.removeItem('lit-web3-provider');
-          await store.removeItem('lit-comms-keypair');
-          await store.removeItem('lit-auth-signature');
-          await store.removeItem(`lit-auth-signature-${address ?? ''}`);
-
-          resolve(true);
-        } catch (e) {
-          reject(e);
-        }
-      })();
-    });
-  }
-
-  /*
-   ** Check the connection status of the user
-   */
-
-  async isConnected(): Promise<{ did: any; address: string }> {
-    return new Promise((resolve, reject) => {
-      (async () => {
-        await this.ceramic;
-        const store = new Store();
-        await this.lit.connect();
-
-        const sessionString = await store.getItem('ceramic-session');
-
-        /** Connect to Ceramic using the session previously stored */
-        try {
-          const session = await DIDSession.fromSession(sessionString ?? '');
-
-          const { address } = getAddressFromDid(session.id);
+          const sessionString = session.serialize();
+          await store.setItem('ceramic-session', sessionString);
 
           const _userAuthSig = await store.getItem(
             'lit-auth-signature-' + address
           );
           if (_userAuthSig) {
             await store.setItem('lit-auth-signature', _userAuthSig);
+          }
+
+          if (
+            !_userAuthSig ||
+            _userAuthSig == '' ||
+            _userAuthSig == undefined
+          ) {
+            const web3 = new Web3Provider(this.provider);
+            const { chainId } = await web3.getNetwork();
+
+            await ethConnect.signAndSaveAuthMessage({
+              web3,
+              account: address,
+              chainId,
+              resources: null,
+              expiration: new Date(
+                Date.now() + 1000 * 60 * 60 * 24
+              ).toISOString()
+            });
+
+            const _authSig = await store.getItem('lit-auth-signature');
+            const authSig = JSON.parse(_authSig ?? '');
+            if (authSig && authSig != '') {
+              await store.setItem(
+                'lit-auth-signature-' + address,
+                JSON.stringify(authSig)
+              );
+            }
           }
 
           this.ethersProvider
@@ -304,10 +218,89 @@ export default class Allostasis<
 
               reject(e);
             });
-        } catch (e) {
-          reject(e);
+        } else {
+          reject('Getting auth method failed');
         }
-      })();
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  /*
+   ** Disconnect the user
+   */
+
+  async disconnect(address?: string): Promise<boolean> {
+    return new Promise(async (resolve, reject) => {
+      const store = new Store();
+
+      try {
+        await store.removeItem('ceramic-session');
+        await store.removeItem('ceramic:auth_type');
+        await store.removeItem('lit-web3-provider');
+        await store.removeItem('lit-comms-keypair');
+        await store.removeItem('lit-auth-signature');
+        await store.removeItem(`lit-auth-signature-${address ?? ''}`);
+
+        resolve(true);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  /*
+   ** Check the connection status of the user
+   */
+
+  async isConnected(): Promise<{ did: any; address: string }> {
+    return new Promise(async (resolve, reject) => {
+      await this.ceramic;
+      const store = new Store();
+      await this.lit.connect();
+
+      const sessionString = await store.getItem('ceramic-session');
+
+      /** Connect to Ceramic using the session previously stored */
+      try {
+        const session = await DIDSession.fromSession(sessionString ?? '');
+
+        const { address } = getAddressFromDid(session.id);
+
+        const _userAuthSig = await store.getItem(
+          'lit-auth-signature-' + address
+        );
+        if (_userAuthSig) {
+          await store.setItem('lit-auth-signature', _userAuthSig);
+        }
+
+        this.ethersProvider
+          .send('eth_requestAccounts', [])
+          .then(async () => {
+            await this.ceramic.setDID(session.did);
+            this.composeClient.setDID(session.did);
+
+            this.ethersAddress = address;
+
+            if (this.nakamaClient) {
+              this.nakamaSession = await this.nakamaClient.authenticateCustom(
+                session.did?.parent.split(':')[4] ?? uuidv4()
+              );
+            }
+
+            resolve({ did: session.did.id, address: address ?? '' });
+          })
+          .catch((e) => {
+            store.removeItem('ceramic-session');
+            store.removeItem('lit-auth-signature-' + address);
+            store.removeItem('lit-auth-signature');
+
+            reject(e);
+          });
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 
@@ -363,6 +356,9 @@ export default class Allostasis<
               })
               {
                 document {
+                  creator {
+                    id
+                  }
                   id
                   displayName
                   email
@@ -473,6 +469,9 @@ export default class Allostasis<
             })
             {
               document {
+                creator {
+                  id
+                }
                 id
                 profileID
                 title
@@ -534,6 +533,9 @@ export default class Allostasis<
             })
             {
               document {
+                creator {
+                  id
+                }
                 id
                 profileID
                 title
@@ -592,6 +594,9 @@ export default class Allostasis<
             })
             {
               document {
+                creator {
+                  id
+                }
                 id
                 profileID
                 title
@@ -653,6 +658,9 @@ export default class Allostasis<
             })
             {
               document {
+                creator {
+                  id
+                }
                 id
                 profileID
                 title
@@ -692,6 +700,9 @@ export default class Allostasis<
             query {
               viewer {
                 profile {
+                  creator {
+                    id
+                  }
                   id
                   displayName
                   email
@@ -709,6 +720,9 @@ export default class Allostasis<
                   experiences(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         id
                         city
                         title
@@ -723,6 +737,9 @@ export default class Allostasis<
                   educations(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         id
                         city
                         title
@@ -738,6 +755,9 @@ export default class Allostasis<
                   posts(filters: { where: { isDeleted: { equalTo: false } } }, sorting: { createdAt: DESC }, last: 1000) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         id
                         body
                         isDeleted
@@ -761,6 +781,9 @@ export default class Allostasis<
                         comments(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                           edges {
                             node {
+                              creator {
+                                id
+                              }
                               id
                               content
                               replyingToID
@@ -768,6 +791,9 @@ export default class Allostasis<
                               isDeleted
                               profileID
                               profile {
+                                creator {
+                                  id
+                                }
                                 id
                                 displayName
                                 avatar
@@ -777,6 +803,9 @@ export default class Allostasis<
                         }
                         likesCount(filters: { where: { isDeleted: { equalTo: false } } })
                         profile {
+                          creator {
+                            id
+                          }
                           id
                           avatar
                           displayName
@@ -791,10 +820,16 @@ export default class Allostasis<
                   followers(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         id
                         isDeleted
                         profileID
                         profile {
+                          creator {
+                            id
+                          }
                           displayName
                           avatar
                           postsCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -808,10 +843,16 @@ export default class Allostasis<
                   followings(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         id
                         isDeleted
                         targetProfileID
                         targetProfile {
+                          creator {
+                            id
+                          }
                           displayName
                           avatar
                           postsCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -825,6 +866,9 @@ export default class Allostasis<
                   chats(last: 1000, filters: { where: { isDeleted: { equalTo: false } } }) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         channelID
                         createdAt
                         id
@@ -832,12 +876,18 @@ export default class Allostasis<
                         messages(last: 1000) {
                           edges {
                             node {
+                              creator {
+                                id
+                              }
                               body
                               createdAt
                               encryptedSymmetricKey
                               id
                               messageType
                               profile {
+                                creator {
+                                  id
+                                }
                                 id
                                 displayName
                                 avatar
@@ -851,6 +901,9 @@ export default class Allostasis<
                         }
                         messagesCount
                         profile {
+                          creator {
+                            id
+                          }
                           id
                           displayName
                           avatar
@@ -858,6 +911,9 @@ export default class Allostasis<
                           nakamaID
                         }
                         recipientProfile {
+                          creator {
+                            id
+                          }
                           id
                           displayName
                           avatar
@@ -871,6 +927,9 @@ export default class Allostasis<
                   receivedChats(last: 1000, filters: { where: { isDeleted: { equalTo: false } } }) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         channelID
                         createdAt
                         id
@@ -878,12 +937,18 @@ export default class Allostasis<
                         messages(last: 1000) {
                           edges {
                             node {
+                              creator {
+                                id
+                              }
                               body
                               createdAt
                               encryptedSymmetricKey
                               id
                               messageType
                               profile {
+                                creator {
+                                  id
+                                }
                                 id
                                 displayName
                                 avatar
@@ -897,6 +962,9 @@ export default class Allostasis<
                         }
                         messagesCount
                         profile {
+                          creator {
+                            id
+                          }
                           id
                           displayName
                           avatar
@@ -904,6 +972,9 @@ export default class Allostasis<
                           nakamaID
                         }
                         recipientProfile {
+                          creator {
+                            id
+                          }
                           id
                           displayName
                           avatar
@@ -1071,6 +1142,9 @@ export default class Allostasis<
           query {
             node(id: "${id}") {
               ... on Profile {
+                creator {
+                  id
+                }
                 id
                 displayName
                 email
@@ -1088,6 +1162,9 @@ export default class Allostasis<
                 experiences(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                   edges {
                     node {
+                      creator {
+                        id
+                      }
                       id
                       city
                       title
@@ -1102,6 +1179,9 @@ export default class Allostasis<
                 educations(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                   edges {
                     node {
+                      creator {
+                        id
+                      }
                       id
                       city
                       title
@@ -1117,6 +1197,9 @@ export default class Allostasis<
                 posts(filters: { where: { isDeleted: { equalTo: false } } }, sorting: { createdAt: DESC }, last: 1000) {
                   edges {
                     node {
+                      creator {
+                        id
+                      }
                       id
                       body
                       isDeleted
@@ -1140,6 +1223,9 @@ export default class Allostasis<
                       comments(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                         edges {
                           node {
+                            creator {
+                              id
+                            }
                             id
                             content
                             replyingToID
@@ -1156,6 +1242,9 @@ export default class Allostasis<
                       }
                       likesCount(filters: { where: { isDeleted: { equalTo: false } } })
                       profile {
+                        creator {
+                          id
+                        }
                         id
                         avatar
                         displayName
@@ -1170,9 +1259,15 @@ export default class Allostasis<
                 followers(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                   edges {
                     node {
+                      creator {
+                        id
+                      }
                       id
                       isDeleted
                       profile {
+                        creator {
+                          id
+                        }
                         displayName
                         avatar
                         postsCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -1186,9 +1281,15 @@ export default class Allostasis<
                 followings(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                   edges {
                     node {
+                      creator {
+                        id
+                      }
                       id
                       isDeleted
                       targetProfile {
+                        creator {
+                          id
+                        }
                         displayName
                         avatar
                         postsCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -1287,6 +1388,9 @@ export default class Allostasis<
             ) {
               edges {
                 node {
+                  creator {
+                    id
+                  }
                   id
                   displayName
                   email
@@ -1304,6 +1408,9 @@ export default class Allostasis<
                   experiences(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         id
                         city
                         title
@@ -1318,6 +1425,9 @@ export default class Allostasis<
                   educations(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         id
                         city
                         title
@@ -1333,6 +1443,9 @@ export default class Allostasis<
                   posts(filters: { where: { isDeleted: { equalTo: false } } }, sorting: { createdAt: DESC }, last: 1000) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         id
                         body
                         isDeleted
@@ -1356,6 +1469,9 @@ export default class Allostasis<
                         comments(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                           edges {
                             node {
+                              creator {
+                                id
+                              }
                               id
                               content
                               replyingToID
@@ -1363,6 +1479,9 @@ export default class Allostasis<
                               isDeleted
                               profileID
                               profile {
+                                creator {
+                                  id
+                                }
                                 id
                                 displayName
                                 avatar
@@ -1372,6 +1491,9 @@ export default class Allostasis<
                         }
                         likesCount(filters: { where: { isDeleted: { equalTo: false } } })
                         profile {
+                          creator {
+                            id
+                          }
                           id
                           avatar
                           displayName
@@ -1386,9 +1508,15 @@ export default class Allostasis<
                   followers(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         id
                         isDeleted
                         profile {
+                          creator {
+                            id
+                          }
                           displayName
                           avatar
                           postsCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -1402,9 +1530,15 @@ export default class Allostasis<
                   followings(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         id
                         isDeleted
                         targetProfile {
+                          creator {
+                            id
+                          }
                           displayName
                           avatar
                           postsCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -1540,19 +1674,19 @@ export default class Allostasis<
   }> {
     return new Promise(async (resolve, reject) => {
       try {
-        const store = new Store();
-
         const { encryptedString, symmetricKey } = await LitJsSdk.encryptString(
           content
         );
 
-        const authSig = await getAuthSig(store);
+        const authSig = await LitJsSdk.checkAndSignAuthMessage({
+          chain: this.chain.name
+        });
 
         const encryptedSymmetricKey = await this.lit.saveEncryptionKey({
           unifiedAccessControlConditions,
           symmetricKey,
           authSig,
-          chain: `${this.chain.id}`
+          chain: this.chain.name
         });
 
         resolve({
@@ -1653,6 +1787,9 @@ export default class Allostasis<
             })
             {
               document {
+                creator {
+                  id
+                }
                 id
                 body
                 profileID
@@ -1763,12 +1900,13 @@ export default class Allostasis<
                 }",
                 encryptedSymmetricKey: "${params.encryptedSymmetricKey}",
                 ${params.tags.map((x, i) => `tag${i + 1}: "${x}",`)}
-                createdAt: "${dayjs().toISOString()}",
-                isDeleted: false
               }
             })
             {
               document {
+                creator {
+                  id
+                }
                 id
                 body
                 profileID
@@ -1961,6 +2099,9 @@ export default class Allostasis<
             ) {
               edges {
                 node {
+                  creator {
+                    id
+                  }
                   id
                   body
                   profileID
@@ -1982,6 +2123,9 @@ export default class Allostasis<
                   unifiedAccessControlConditions
                   encryptedSymmetricKey
                   profile {
+                    creator {
+                      id
+                    }
                     id
                     displayName
                     avatar
@@ -1995,6 +2139,9 @@ export default class Allostasis<
                   comments(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         id
                         content
                         replyingToID
@@ -2002,6 +2149,9 @@ export default class Allostasis<
                         isDeleted
                         profileID
                         profile {
+                          creator {
+                            id
+                          }
                           id
                           displayName
                           avatar
@@ -2015,10 +2165,16 @@ export default class Allostasis<
                   likes(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         id
                         isDeleted
                         profileID
                         profile {
+                          creator {
+                            id
+                          }
                           id
                           displayName
                           avatar
@@ -2135,6 +2291,9 @@ export default class Allostasis<
                 unifiedAccessControlConditions
                 encryptedSymmetricKey
                 profile {
+                  creator {
+                    id
+                  }
                   id
                   displayName
                   avatar
@@ -2148,6 +2307,9 @@ export default class Allostasis<
                 comments(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                   edges {
                     node {
+                      creator {
+                        id
+                      }
                       id
                       content
                       replyingToID
@@ -2155,6 +2317,9 @@ export default class Allostasis<
                       isDeleted
                       profileID
                       profile {
+                        creator {
+                          id
+                        }
                         id
                         displayName
                         avatar
@@ -2168,10 +2333,16 @@ export default class Allostasis<
                 likes(filters: { where: { isDeleted: { equalTo: false } } }, last: 1000) {
                   edges {
                     node {
+                      creator {
+                        id
+                      }
                       id
                       isDeleted
                       profileID
                       profile {
+                        creator {
+                          id
+                        }
                         id
                         displayName
                         avatar
@@ -2265,11 +2436,21 @@ export default class Allostasis<
             }) 
             {
               document {
+                creator {
+                  id
+                }
                 id
                 content
                 createdAt
                 postID
                 profileID
+                profile {
+                  id
+                  displayName
+                  avatar
+                  nakamaID
+                  bio
+                }
                 isDeleted
                 replyingToID
               }
@@ -2325,9 +2506,19 @@ export default class Allostasis<
             ) {
               edges {
                 node {
+                  creator {
+                    id
+                  }
                   id
                   postID
                   profileID
+                  profile {
+                    id
+                    displayName
+                    avatar
+                    nakamaID
+                    bio
+                  }
                   isDeleted
                 }
               }
@@ -2353,6 +2544,9 @@ export default class Allostasis<
                   }) 
                   {
                     document {
+                      creator {
+                        id
+                      }
                       id
                       postID
                       profileID
@@ -2376,6 +2570,9 @@ export default class Allostasis<
                   }) 
                   {
                     document {
+                      creator {
+                        id
+                      }
                       id
                       postID
                       profileID
@@ -2401,6 +2598,9 @@ export default class Allostasis<
                 }) 
                 {
                   document {
+                    creator {
+                      id
+                    }
                     id
                     postID
                     profileID
@@ -2487,6 +2687,9 @@ export default class Allostasis<
                   })
                   {
                     document {
+                      creator {
+                        id
+                      }
                       id
                       targetProfileID
                       profileID
@@ -2510,6 +2713,9 @@ export default class Allostasis<
                   })
                   {
                     document {
+                      creator {
+                        id
+                      }
                       id
                       targetProfileID
                       profileID
@@ -2535,6 +2741,9 @@ export default class Allostasis<
                 })
                 {
                   document {
+                    creator {
+                      id
+                    }
                     id
                     targetProfileID
                     profileID
@@ -2626,11 +2835,15 @@ export default class Allostasis<
    ** Get or create chat
    */
 
-  async getOrCreateChat(params: { profileID: string; recipientProfileID: string; channelID: string }): Promise<Chat> {
+  async getOrCreateChat(params: {
+    profileID: string;
+    recipientProfileID: string;
+    channelID: string;
+  }): Promise<Chat> {
     return new Promise(async (resolve, reject) => {
-        const chats = await this.composeClient.executeQuery<{
-          chatIndex: { edges: { node: Chat }[] };
-        }>(`
+      const chats = await this.composeClient.executeQuery<{
+        chatIndex: { edges: { node: Chat }[] };
+      }>(`
           query {
             chatIndex(
               filters: { 
@@ -2643,6 +2856,9 @@ export default class Allostasis<
             ) {
               edges {
                 node {
+                  creator {
+                    id
+                  }
                   channelID
                   createdAt
                   id
@@ -2650,12 +2866,18 @@ export default class Allostasis<
                   messages(last: 1000) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         body
                         createdAt
                         encryptedSymmetricKey
                         id
                         messageType
                         profile {
+                          creator {
+                            id
+                          }
                           id
                           displayName
                           avatar
@@ -2669,6 +2891,9 @@ export default class Allostasis<
                   }
                   messagesCount
                   profile {
+                    creator {
+                      id
+                    }
                     id
                     displayName
                     avatar
@@ -2676,6 +2901,9 @@ export default class Allostasis<
                     nakamaID
                   }
                   recipientProfile {
+                    creator {
+                      id
+                    }
                     id
                     displayName
                     avatar
@@ -2688,22 +2916,22 @@ export default class Allostasis<
           }
         `);
 
-        if (chats.errors != null && chats.errors.length > 0) {
-          reject(chats);
-        } else {
-          if (chats.data.chatIndex.edges.length > 0) {
-            const chat = chats.data.chatIndex.edges[0];
+      if (chats.errors != null && chats.errors.length > 0) {
+        reject(chats);
+      } else {
+        if (chats.data.chatIndex.edges.length > 0) {
+          const chat = chats.data.chatIndex.edges[0];
 
-            resolve({
-              ...chat.node,
-              messages: _.get(chat.node, 'messages.edges', []).map(
-                (x: { node: ChatMessage }) => x.node
-              )
-            });
-          } else {
-            const create = await this.composeClient.executeQuery<{
-              createChat: { document: Chat };
-            }>(`
+          resolve({
+            ...chat.node,
+            messages: _.get(chat.node, 'messages.edges', []).map(
+              (x: { node: ChatMessage }) => x.node
+            )
+          });
+        } else {
+          const create = await this.composeClient.executeQuery<{
+            createChat: { document: Chat };
+          }>(`
               mutation {
                 createChat(input: {
                   content: {
@@ -2716,6 +2944,9 @@ export default class Allostasis<
                 })
                 {
                   document {
+                    creator {
+                      id
+                    }
                     channelID
                     createdAt
                     id
@@ -2723,12 +2954,18 @@ export default class Allostasis<
                     messages(last: 1000) {
                       edges {
                         node {
+                          creator {
+                            id
+                          }
                           body
                           createdAt
                           encryptedSymmetricKey
                           id
                           messageType
                           profile {
+                            creator {
+                              id
+                            }
                             id
                             displayName
                             avatar
@@ -2742,6 +2979,9 @@ export default class Allostasis<
                     }
                     messagesCount
                     profile {
+                      creator {
+                        id
+                      }
                       id
                       displayName
                       avatar
@@ -2749,6 +2989,9 @@ export default class Allostasis<
                       nakamaID
                     }
                     recipientProfile {
+                      creator {
+                        id
+                      }
                       id
                       displayName
                       avatar
@@ -2759,17 +3002,17 @@ export default class Allostasis<
                 }
               }
             `);
-    
-            if (create.errors != null && create.errors.length > 0) {
-              reject(create);
-            } else {
-              resolve({
-                ...create.data.createChat.document,
-                messages: [],
-              });
-            }
+
+          if (create.errors != null && create.errors.length > 0) {
+            reject(create);
+          } else {
+            resolve({
+              ...create.data.createChat.document,
+              messages: []
+            });
           }
         }
+      }
     });
   }
 
@@ -2777,7 +3020,10 @@ export default class Allostasis<
    ** Get chats of user
    */
 
-  async getChats(params: { profile: string; cursor: string }): Promise<{ chats:Chat[], cursor: string }> {
+  async getChats(params: {
+    profile: string;
+    cursor: string;
+  }): Promise<{ chats: Chat[]; cursor: string }> {
     return new Promise((resolve, reject) => {
       (async () => {
         const chats = await this.composeClient.executeQuery<{
@@ -2796,6 +3042,9 @@ export default class Allostasis<
             ) {
               edges {
                 node {
+                  creator {
+                    id
+                  }
                   channelID
                   createdAt
                   id
@@ -2803,12 +3052,18 @@ export default class Allostasis<
                   messages(last: 1000) {
                     edges {
                       node {
+                        creator {
+                          id
+                        }
                         body
                         createdAt
                         encryptedSymmetricKey
                         id
                         messageType
                         profile {
+                          creator {
+                            id
+                          }
                           id
                           displayName
                           avatar
@@ -2822,6 +3077,9 @@ export default class Allostasis<
                   }
                   messagesCount
                   profile {
+                    creator {
+                      id
+                    }
                     id
                     displayName
                     avatar
@@ -2829,6 +3087,9 @@ export default class Allostasis<
                     nakamaID
                   }
                   recipientProfile {
+                    creator {
+                      id
+                    }
                     id
                     displayName
                     avatar
@@ -2869,7 +3130,7 @@ export default class Allostasis<
    ** Send a message
    */
 
-   async sendMessage(params: {
+  async sendMessage(params: {
     content: string;
     chatID: string;
     profileID: string;
@@ -2877,7 +3138,10 @@ export default class Allostasis<
   }): Promise<ChatMessage> {
     return new Promise(async (resolve, reject) => {
       try {
-        const encryption = await this.encryptContent(params.content, params.unifiedAccessControlConditions);
+        const encryption = await this.encryptContent(
+          params.content,
+          params.unifiedAccessControlConditions
+        );
 
         const create = await this.composeClient.executeQuery<{
           createChatMessage: { document: ChatMessage };
@@ -2886,7 +3150,9 @@ export default class Allostasis<
             createChatMessage(input: {
               content: {
                 body: "${encryption.encryptedString}",
-                unifiedAccessControlConditions: "${encryption.unifiedAccessControlConditions}",
+                unifiedAccessControlConditions: "${
+                  encryption.unifiedAccessControlConditions
+                }",
                 encryptedSymmetricKey: "${encryption.encryptedSymmetricKey}",
                 profileID: "${params.profileID}",
                 chatID: "${params.chatID}",
@@ -2895,12 +3161,18 @@ export default class Allostasis<
             })
             {
               document {
+                creator {
+                  id
+                }
                 body
                 createdAt
                 encryptedSymmetricKey
                 id
                 messageType
                 profile {
+                  creator {
+                    id
+                  }
                   id
                   displayName
                   avatar

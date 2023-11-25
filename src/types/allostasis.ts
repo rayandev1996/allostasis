@@ -15,13 +15,14 @@ export interface AllostasisConstructor {
     url: string;
     projectId: string;
     apiKey: string
-  }
+  };
   nakama?: {
     server: string;
     port: string;
     key: string;
     useSSL: boolean;
-  }
+  };
+  debugLit?: boolean;
 }
 
 export interface Chain {
@@ -46,6 +47,9 @@ export type Communities = {
 }
 
 export interface Profile {
+  creator?: {
+    id: string;
+  };
   id?: string;
   displayName?: string;
   email?: string;
@@ -86,12 +90,18 @@ export enum Gender {
 }
 
 export interface Chat {
+  creator?: {
+    id: string;
+  };
   channelID?: string;
   createdAt?: string;
   id?: string;
   isDeleted?: boolean;
   messagesCount?: number;
   profile?: {
+    creator?: {
+      id: string;
+    };
     id?: string;
     displayName?: string;
     avatar?: string;
@@ -99,6 +109,9 @@ export interface Chat {
     nakamaID?: string;
   };
   recipientProfile?: {
+    creator?: {
+      id: string;
+    };
     id?: string;
     displayName?: string;
     avatar?: string;
@@ -109,6 +122,9 @@ export interface Chat {
 }
 
 export interface ChatMessage {
+  creator?: {
+    id: string;
+  };
   body?: string;
   createdAt?: string;
   encryptedSymmetricKey?: string;
@@ -117,6 +133,9 @@ export interface ChatMessage {
   profileID?: string;
   unifiedAccessControlConditions?: string;
   profile?: {
+    creator?: {
+      id: string;
+    };
     id?: string;
     displayName?: string;
     avatar?: string;
@@ -126,6 +145,9 @@ export interface ChatMessage {
 }
 
 export interface Education {
+  creator?: {
+    id: string;
+  };
   id?: string;
   title?: string;
   city?: string;
@@ -137,6 +159,9 @@ export interface Education {
 }
 
 export interface Experience {
+  creator?: {
+    id: string;
+  };
   id?: string;
   city?: string;
   title?: string;
@@ -150,7 +175,7 @@ export interface Experience {
 export interface Post {
   id?: string;
   creator?: {
-    id?: string;
+    id: string;
   };
   body?: string;
   createdAt?: any;
@@ -175,13 +200,16 @@ export interface Follow {
   profileID?: string;
   targetProfileID?: string;
   creator?: {
-    id?: string;
+    id: string;
   };
   profile?: Profile;
   targetProfile?: Profile;
 }
 
 export interface PostComment {
+  creator?: {
+    id: string;
+  };
   id?: string;
   content?: string;
   createdAt?: any;
@@ -193,6 +221,9 @@ export interface PostComment {
 }
 
 export interface PostLike {
+  creator?: {
+    id: string;
+  };
   id?: string;
   postID?: string;
   isDeleted?: boolean;
