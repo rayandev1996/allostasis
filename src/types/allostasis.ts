@@ -6,6 +6,7 @@ import { AvatiaProfile } from './avatia';
 import { CenteriaProfile } from './centeria';
 import { IncarniaProfile } from './incarnia';
 import { WeariaProfile } from './wearia';
+import { Socket } from '@heroiclabs/nakama-js';
 
 export interface AllostasisConstructor {
   nodeURL: string;
@@ -36,6 +37,8 @@ export interface Chain {
     decimals: number;
   }
 }
+
+export type NakamaSocket = Socket
 
 export type Communities = {
   greenia: GreeniaProfile

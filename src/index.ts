@@ -204,9 +204,13 @@ export default class Allostasis<
               this.ethersAddress = address;
 
               if (this.nakamaClient) {
-                this.nakamaSession = await this.nakamaClient.authenticateCustom(
-                  session.did?.parent.split(':')[4] ?? uuidv4()
-                );
+                try {
+                  this.nakamaSession = await this.nakamaClient.authenticateCustom(
+                    session.did?.parent.split(':')[4] ?? uuidv4()
+                  );
+                } catch (e) {
+                  // nakama failed
+                }
               }
 
               resolve({ did: session.did.id, address: address ?? '' });
@@ -283,12 +287,16 @@ export default class Allostasis<
 
             this.ethersAddress = address;
 
-            if (this.nakamaClient) {
-              this.nakamaSession = await this.nakamaClient.authenticateCustom(
-                session.did?.parent.split(':')[4] ?? uuidv4()
-              );
+            try {
+              if (this.nakamaClient) {
+                this.nakamaSession = await this.nakamaClient.authenticateCustom(
+                  session.did?.parent.split(':')[4] ?? uuidv4()
+                );
+              }
+            } catch (e) {
+              // nakama failed
             }
-
+            
             resolve({ did: session.did.id, address: address ?? '' });
           })
           .catch((e) => {
@@ -1268,6 +1276,7 @@ export default class Allostasis<
                         creator {
                           id
                         }
+                        id
                         displayName
                         avatar
                         postsCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -1290,6 +1299,7 @@ export default class Allostasis<
                         creator {
                           id
                         }
+                        id
                         displayName
                         avatar
                         postsCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -1517,6 +1527,7 @@ export default class Allostasis<
                           creator {
                             id
                           }
+                          id
                           displayName
                           avatar
                           postsCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -1539,6 +1550,7 @@ export default class Allostasis<
                           creator {
                             id
                           }
+                          id
                           displayName
                           avatar
                           postsCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -1724,7 +1736,7 @@ export default class Allostasis<
         const decryptedSymmetricKey = await this.lit.getEncryptionKey({
           unifiedAccessControlConditions: _access,
           toDecrypt: encryptedSymmetricKey,
-          chain: `${this.chain.id}`,
+          chain: this.chain.name,
           authSig
         });
 
@@ -3037,7 +3049,7 @@ export default class Allostasis<
                   { where: { isDeleted: { equalTo: false }, recipientProfileID: { equalTo: "${params.profile}" } } }
                 ]
               },
-              first: 1,
+              first: 1000,
               after: "${params.cursor}"
             ) {
               edges {
@@ -3134,14 +3146,18 @@ export default class Allostasis<
     content: string;
     chatID: string;
     profileID: string;
-    unifiedAccessControlConditions: UnifiedAccessControlConditions;
+    messageType: string;
+    unifiedAccessControlConditions?: UnifiedAccessControlConditions;
   }): Promise<ChatMessage> {
     return new Promise(async (resolve, reject) => {
       try {
-        const encryption = await this.encryptContent(
-          params.content,
-          params.unifiedAccessControlConditions
-        );
+        let encryption;
+        if (params.unifiedAccessControlConditions != null) {
+          encryption = await this.encryptContent(
+            params.content,
+            params.unifiedAccessControlConditions
+          );
+        }
 
         const create = await this.composeClient.executeQuery<{
           createChatMessage: { document: ChatMessage };
@@ -3149,13 +3165,12 @@ export default class Allostasis<
           mutation {
             createChatMessage(input: {
               content: {
-                body: "${encryption.encryptedString}",
-                unifiedAccessControlConditions: "${
-                  encryption.unifiedAccessControlConditions
-                }",
-                encryptedSymmetricKey: "${encryption.encryptedSymmetricKey}",
+                body: "${encryption ? encryption.encryptedString : params.content}",
+                unifiedAccessControlConditions: "${encryption ? encryption.unifiedAccessControlConditions : 'null'}",
+                encryptedSymmetricKey: "${encryption ? encryption.encryptedSymmetricKey : 'null'}",
                 profileID: "${params.profileID}",
                 chatID: "${params.chatID}",
+                messageType: "${params.messageType}",
                 createdAt: "${dayjs().toISOString()}",
               }
             })

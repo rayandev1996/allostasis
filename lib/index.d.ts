@@ -157,6 +157,7 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
         content: string;
         chatID: string;
         profileID: string;
-        unifiedAccessControlConditions: UnifiedAccessControlConditions;
+        messageType: string;
+        unifiedAccessControlConditions?: UnifiedAccessControlConditions;
     }): Promise<ChatMessage>;
 }
