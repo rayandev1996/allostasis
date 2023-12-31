@@ -2,43 +2,43 @@
 export const definition = {
   models: {
     Profile: {
-      id: "kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m",
+      id: "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
       accountRelation: { type: "single" },
     },
     Chat: {
-      id: "kjzl6hvfrbw6c5c31u717vuk9leanze2tvx9zzyw3otyc8bfud9ureya3jg4g36",
+      id: "kjzl6hvfrbw6c6tl4kf80cubp52vom8d577wus7vn65tq3m81vye37fzwj63nxd",
       accountRelation: { type: "list" },
     },
     ChatMessage: {
-      id: "kjzl6hvfrbw6c93shuw1b8gxrwgynmve25m3gmzxlyt0t2u1neegzme4xlbe1bz",
+      id: "kjzl6hvfrbw6c5s8i33o6mzl2wzz5pa9ceq8opp57mzs2okkko68auvemtbidpf",
       accountRelation: { type: "list" },
     },
     Experience: {
-      id: "kjzl6hvfrbw6canpk7j60s0nbkfa107qx6zwi8sadwwu48ejlf0e19frdh1wmm7",
-      accountRelation: { type: "list" },
-    },
-    Post: {
-      id: "kjzl6hvfrbw6c6bj8bo0m5cp2pmk4mm1qccfsdk1zwdmdaquoqxrq3cuw5gvs9n",
-      accountRelation: { type: "list" },
-    },
-    Follow: {
-      id: "kjzl6hvfrbw6c5oqar67kzai2rrhexb727ur49e2rvqsgcb9mzw1bpdx4nrix8b",
+      id: "kjzl6hvfrbw6c68di6r9dlueav2mceh860s6ah0zzixx6ny7efy6q3cb3w7mfbw",
       accountRelation: { type: "list" },
     },
     Education: {
-      id: "kjzl6hvfrbw6c75txxcu51vqzcmato84uzd23uvstuzh7lv671nqg1670gtj9wj",
+      id: "kjzl6hvfrbw6c8a11ae2ydekm324muff0uqo9l9k1dxjkhsltxj1o1uu2u24ykl",
       accountRelation: { type: "list" },
     },
     Asset: {
-      id: "kjzl6hvfrbw6c57be4ouqj3kp1jmp3x1l3z69kjuk0ilemhke5pvcsrkthukl4a",
+      id: "kjzl6hvfrbw6c8lwy2do4vg15ub141b49iirxh3hoeq036a5m2xodwy556vxn8b",
+      accountRelation: { type: "list" },
+    },
+    Follow: {
+      id: "kjzl6hvfrbw6c5jllzjzqfor1ns0uhgmvrzes32c2pv3x8kr5wvtr7f2peimgaq",
+      accountRelation: { type: "list" },
+    },
+    Post: {
+      id: "kjzl6hvfrbw6c7fpztqw008g6or3z7ys740k8u8n5uz3mbvzssofrvq3lsz6zsv",
       accountRelation: { type: "list" },
     },
     PostComment: {
-      id: "kjzl6hvfrbw6c806ppwm0mhryxut55x12vi7ikts591kzhk8sevy132kpqxdtby",
+      id: "kjzl6hvfrbw6c7pujjiknnq41k8gv8fp2gzdl3mmrda21yndrd6szywa26j5wz7",
       accountRelation: { type: "list" },
     },
     PostLike: {
-      id: "kjzl6hvfrbw6c7snil2khwtf3y7i0o4okjdsgk0keq2saleldgq1w933d484whu",
+      id: "kjzl6hvfrbw6ca13ntqavf4hufmqsxa7m2vym6asso4vwhr22xir18efqlzfcba",
       accountRelation: { type: "list" },
     },
   },
@@ -66,6 +66,7 @@ export const definition = {
         required: false,
         item: { type: "string", required: false },
       },
+      publicEncryptionDID: { type: "did", required: false },
       creator: { type: "view", viewType: "documentAccount" },
       chats: {
         type: "view",
@@ -73,7 +74,7 @@ export const definition = {
         relation: {
           source: "queryConnection",
           model:
-            "kjzl6hvfrbw6c5c31u717vuk9leanze2tvx9zzyw3otyc8bfud9ureya3jg4g36",
+            "kjzl6hvfrbw6c6tl4kf80cubp52vom8d577wus7vn65tq3m81vye37fzwj63nxd",
           property: "profileID",
         },
       },
@@ -83,7 +84,7 @@ export const definition = {
         relation: {
           source: "queryCount",
           model:
-            "kjzl6hvfrbw6c5c31u717vuk9leanze2tvx9zzyw3otyc8bfud9ureya3jg4g36",
+            "kjzl6hvfrbw6c6tl4kf80cubp52vom8d577wus7vn65tq3m81vye37fzwj63nxd",
           property: "profileID",
         },
       },
@@ -93,7 +94,7 @@ export const definition = {
         relation: {
           source: "queryConnection",
           model:
-            "kjzl6hvfrbw6c5c31u717vuk9leanze2tvx9zzyw3otyc8bfud9ureya3jg4g36",
+            "kjzl6hvfrbw6c6tl4kf80cubp52vom8d577wus7vn65tq3m81vye37fzwj63nxd",
           property: "recipientProfileID",
         },
       },
@@ -103,7 +104,7 @@ export const definition = {
         relation: {
           source: "queryCount",
           model:
-            "kjzl6hvfrbw6c5c31u717vuk9leanze2tvx9zzyw3otyc8bfud9ureya3jg4g36",
+            "kjzl6hvfrbw6c6tl4kf80cubp52vom8d577wus7vn65tq3m81vye37fzwj63nxd",
           property: "recipientProfileID",
         },
       },
@@ -113,7 +114,7 @@ export const definition = {
         relation: {
           source: "queryConnection",
           model:
-            "kjzl6hvfrbw6canpk7j60s0nbkfa107qx6zwi8sadwwu48ejlf0e19frdh1wmm7",
+            "kjzl6hvfrbw6c68di6r9dlueav2mceh860s6ah0zzixx6ny7efy6q3cb3w7mfbw",
           property: "profileID",
         },
       },
@@ -123,7 +124,7 @@ export const definition = {
         relation: {
           source: "queryConnection",
           model:
-            "kjzl6hvfrbw6c75txxcu51vqzcmato84uzd23uvstuzh7lv671nqg1670gtj9wj",
+            "kjzl6hvfrbw6c8a11ae2ydekm324muff0uqo9l9k1dxjkhsltxj1o1uu2u24ykl",
           property: "profileID",
         },
       },
@@ -133,7 +134,7 @@ export const definition = {
         relation: {
           source: "queryConnection",
           model:
-            "kjzl6hvfrbw6c5oqar67kzai2rrhexb727ur49e2rvqsgcb9mzw1bpdx4nrix8b",
+            "kjzl6hvfrbw6c5jllzjzqfor1ns0uhgmvrzes32c2pv3x8kr5wvtr7f2peimgaq",
           property: "profileID",
         },
       },
@@ -143,7 +144,7 @@ export const definition = {
         relation: {
           source: "queryCount",
           model:
-            "kjzl6hvfrbw6c5oqar67kzai2rrhexb727ur49e2rvqsgcb9mzw1bpdx4nrix8b",
+            "kjzl6hvfrbw6c5jllzjzqfor1ns0uhgmvrzes32c2pv3x8kr5wvtr7f2peimgaq",
           property: "profileID",
         },
       },
@@ -153,7 +154,7 @@ export const definition = {
         relation: {
           source: "queryConnection",
           model:
-            "kjzl6hvfrbw6c5oqar67kzai2rrhexb727ur49e2rvqsgcb9mzw1bpdx4nrix8b",
+            "kjzl6hvfrbw6c5jllzjzqfor1ns0uhgmvrzes32c2pv3x8kr5wvtr7f2peimgaq",
           property: "targetProfileID",
         },
       },
@@ -163,7 +164,7 @@ export const definition = {
         relation: {
           source: "queryCount",
           model:
-            "kjzl6hvfrbw6c5oqar67kzai2rrhexb727ur49e2rvqsgcb9mzw1bpdx4nrix8b",
+            "kjzl6hvfrbw6c5jllzjzqfor1ns0uhgmvrzes32c2pv3x8kr5wvtr7f2peimgaq",
           property: "targetProfileID",
         },
       },
@@ -173,7 +174,7 @@ export const definition = {
         relation: {
           source: "queryConnection",
           model:
-            "kjzl6hvfrbw6c6bj8bo0m5cp2pmk4mm1qccfsdk1zwdmdaquoqxrq3cuw5gvs9n",
+            "kjzl6hvfrbw6c7fpztqw008g6or3z7ys740k8u8n5uz3mbvzssofrvq3lsz6zsv",
           property: "profileID",
         },
       },
@@ -183,7 +184,7 @@ export const definition = {
         relation: {
           source: "queryCount",
           model:
-            "kjzl6hvfrbw6c6bj8bo0m5cp2pmk4mm1qccfsdk1zwdmdaquoqxrq3cuw5gvs9n",
+            "kjzl6hvfrbw6c7fpztqw008g6or3z7ys740k8u8n5uz3mbvzssofrvq3lsz6zsv",
           property: "profileID",
         },
       },
@@ -193,7 +194,7 @@ export const definition = {
         relation: {
           source: "queryConnection",
           model:
-            "kjzl6hvfrbw6c57be4ouqj3kp1jmp3x1l3z69kjuk0ilemhke5pvcsrkthukl4a",
+            "kjzl6hvfrbw6c8lwy2do4vg15ub141b49iirxh3hoeq036a5m2xodwy556vxn8b",
           property: "profileID",
         },
       },
@@ -203,7 +204,7 @@ export const definition = {
         relation: {
           source: "queryCount",
           model:
-            "kjzl6hvfrbw6c57be4ouqj3kp1jmp3x1l3z69kjuk0ilemhke5pvcsrkthukl4a",
+            "kjzl6hvfrbw6c8lwy2do4vg15ub141b49iirxh3hoeq036a5m2xodwy556vxn8b",
           property: "profileID",
         },
       },
@@ -222,7 +223,7 @@ export const definition = {
         relation: {
           source: "document",
           model:
-            "kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m",
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
           property: "profileID",
         },
       },
@@ -232,7 +233,7 @@ export const definition = {
         relation: {
           source: "document",
           model:
-            "kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m",
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
           property: "recipientProfileID",
         },
       },
@@ -242,7 +243,7 @@ export const definition = {
         relation: {
           source: "queryConnection",
           model:
-            "kjzl6hvfrbw6c93shuw1b8gxrwgynmve25m3gmzxlyt0t2u1neegzme4xlbe1bz",
+            "kjzl6hvfrbw6c5s8i33o6mzl2wzz5pa9ceq8opp57mzs2okkko68auvemtbidpf",
           property: "chatID",
         },
       },
@@ -252,7 +253,7 @@ export const definition = {
         relation: {
           source: "queryCount",
           model:
-            "kjzl6hvfrbw6c93shuw1b8gxrwgynmve25m3gmzxlyt0t2u1neegzme4xlbe1bz",
+            "kjzl6hvfrbw6c5s8i33o6mzl2wzz5pa9ceq8opp57mzs2okkko68auvemtbidpf",
           property: "chatID",
         },
       },
@@ -263,15 +264,15 @@ export const definition = {
       createdAt: { type: "datetime", required: true, indexed: true },
       profileID: { type: "streamid", required: true, indexed: true },
       messageType: { type: "string", required: true },
-      encryptedSymmetricKey: { type: "string", required: true },
-      unifiedAccessControlConditions: { type: "string", required: true },
+      encryptedSymmetricKey: { type: "string", required: false },
+      unifiedAccessControlConditions: { type: "string", required: false },
       chat: {
         type: "view",
         viewType: "relation",
         relation: {
           source: "document",
           model:
-            "kjzl6hvfrbw6c5c31u717vuk9leanze2tvx9zzyw3otyc8bfud9ureya3jg4g36",
+            "kjzl6hvfrbw6c6tl4kf80cubp52vom8d577wus7vn65tq3m81vye37fzwj63nxd",
           property: "chatID",
         },
       },
@@ -282,7 +283,7 @@ export const definition = {
         relation: {
           source: "document",
           model:
-            "kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m",
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
           property: "profileID",
         },
       },
@@ -303,8 +304,80 @@ export const definition = {
         relation: {
           source: "document",
           model:
-            "kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m",
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
           property: "profileID",
+        },
+      },
+    },
+    Education: {
+      city: { type: "string", required: true, indexed: true },
+      title: { type: "string", required: true, indexed: true },
+      school: { type: "string", required: true, indexed: true },
+      endDate: { type: "date", required: false },
+      isDeleted: { type: "boolean", required: true, indexed: true },
+      profileID: { type: "streamid", required: true, indexed: true },
+      startDate: { type: "date", required: true },
+      description: { type: "string", required: true, indexed: true },
+      creator: { type: "view", viewType: "documentAccount" },
+      profile: {
+        type: "view",
+        viewType: "relation",
+        relation: {
+          source: "document",
+          model:
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
+          property: "profileID",
+        },
+      },
+    },
+    Asset: {
+      tags: {
+        type: "list",
+        required: false,
+        item: { type: "string", required: false },
+      },
+      image: { type: "string", required: false },
+      title: { type: "string", required: true },
+      isDeleted: { type: "boolean", required: true },
+      profileID: { type: "streamid", required: true },
+      description: { type: "string", required: true },
+      externalURL: { type: "string", required: false },
+      animationURL: { type: "string", required: false },
+      creator: { type: "view", viewType: "documentAccount" },
+      profile: {
+        type: "view",
+        viewType: "relation",
+        relation: {
+          source: "document",
+          model:
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
+          property: "profileID",
+        },
+      },
+    },
+    Follow: {
+      isDeleted: { type: "boolean", required: true, indexed: true },
+      profileID: { type: "streamid", required: true, indexed: true },
+      targetProfileID: { type: "streamid", required: true, indexed: true },
+      creator: { type: "view", viewType: "documentAccount" },
+      profile: {
+        type: "view",
+        viewType: "relation",
+        relation: {
+          source: "document",
+          model:
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
+          property: "profileID",
+        },
+      },
+      targetProfile: {
+        type: "view",
+        viewType: "relation",
+        relation: {
+          source: "document",
+          model:
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
+          property: "targetProfileID",
         },
       },
     },
@@ -335,7 +408,7 @@ export const definition = {
         relation: {
           source: "document",
           model:
-            "kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m",
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
           property: "profileID",
         },
       },
@@ -345,7 +418,7 @@ export const definition = {
         relation: {
           source: "queryConnection",
           model:
-            "kjzl6hvfrbw6c806ppwm0mhryxut55x12vi7ikts591kzhk8sevy132kpqxdtby",
+            "kjzl6hvfrbw6c7pujjiknnq41k8gv8fp2gzdl3mmrda21yndrd6szywa26j5wz7",
           property: "postID",
         },
       },
@@ -355,7 +428,7 @@ export const definition = {
         relation: {
           source: "queryCount",
           model:
-            "kjzl6hvfrbw6c806ppwm0mhryxut55x12vi7ikts591kzhk8sevy132kpqxdtby",
+            "kjzl6hvfrbw6c7pujjiknnq41k8gv8fp2gzdl3mmrda21yndrd6szywa26j5wz7",
           property: "postID",
         },
       },
@@ -365,7 +438,7 @@ export const definition = {
         relation: {
           source: "queryConnection",
           model:
-            "kjzl6hvfrbw6c7snil2khwtf3y7i0o4okjdsgk0keq2saleldgq1w933d484whu",
+            "kjzl6hvfrbw6ca13ntqavf4hufmqsxa7m2vym6asso4vwhr22xir18efqlzfcba",
           property: "postID",
         },
       },
@@ -375,80 +448,8 @@ export const definition = {
         relation: {
           source: "queryCount",
           model:
-            "kjzl6hvfrbw6c7snil2khwtf3y7i0o4okjdsgk0keq2saleldgq1w933d484whu",
+            "kjzl6hvfrbw6ca13ntqavf4hufmqsxa7m2vym6asso4vwhr22xir18efqlzfcba",
           property: "postID",
-        },
-      },
-    },
-    Follow: {
-      isDeleted: { type: "boolean", required: true, indexed: true },
-      profileID: { type: "streamid", required: true, indexed: true },
-      targetProfileID: { type: "streamid", required: true, indexed: true },
-      creator: { type: "view", viewType: "documentAccount" },
-      profile: {
-        type: "view",
-        viewType: "relation",
-        relation: {
-          source: "document",
-          model:
-            "kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m",
-          property: "profileID",
-        },
-      },
-      targetProfile: {
-        type: "view",
-        viewType: "relation",
-        relation: {
-          source: "document",
-          model:
-            "kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m",
-          property: "targetProfileID",
-        },
-      },
-    },
-    Education: {
-      city: { type: "string", required: true, indexed: true },
-      title: { type: "string", required: true, indexed: true },
-      school: { type: "string", required: true, indexed: true },
-      endDate: { type: "date", required: false },
-      isDeleted: { type: "boolean", required: true, indexed: true },
-      profileID: { type: "streamid", required: true, indexed: true },
-      startDate: { type: "date", required: true },
-      description: { type: "string", required: true, indexed: true },
-      creator: { type: "view", viewType: "documentAccount" },
-      profile: {
-        type: "view",
-        viewType: "relation",
-        relation: {
-          source: "document",
-          model:
-            "kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m",
-          property: "profileID",
-        },
-      },
-    },
-    Asset: {
-      tags: {
-        type: "list",
-        required: false,
-        item: { type: "string", required: false },
-      },
-      image: { type: "string", required: false },
-      title: { type: "string", required: true },
-      isDeleted: { type: "boolean", required: true },
-      profileID: { type: "streamid", required: true },
-      description: { type: "string", required: true },
-      externalURL: { type: "string", required: false },
-      animationURL: { type: "string", required: false },
-      creator: { type: "view", viewType: "documentAccount" },
-      profile: {
-        type: "view",
-        viewType: "relation",
-        relation: {
-          source: "document",
-          model:
-            "kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m",
-          property: "profileID",
         },
       },
     },
@@ -465,7 +466,7 @@ export const definition = {
         relation: {
           source: "document",
           model:
-            "kjzl6hvfrbw6c6bj8bo0m5cp2pmk4mm1qccfsdk1zwdmdaquoqxrq3cuw5gvs9n",
+            "kjzl6hvfrbw6c7fpztqw008g6or3z7ys740k8u8n5uz3mbvzssofrvq3lsz6zsv",
           property: "postID",
         },
       },
@@ -476,7 +477,7 @@ export const definition = {
         relation: {
           source: "document",
           model:
-            "kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m",
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
           property: "profileID",
         },
       },
@@ -491,7 +492,7 @@ export const definition = {
         relation: {
           source: "document",
           model:
-            "kjzl6hvfrbw6c6bj8bo0m5cp2pmk4mm1qccfsdk1zwdmdaquoqxrq3cuw5gvs9n",
+            "kjzl6hvfrbw6c7fpztqw008g6or3z7ys740k8u8n5uz3mbvzssofrvq3lsz6zsv",
           property: "postID",
         },
       },
@@ -502,7 +503,7 @@ export const definition = {
         relation: {
           source: "document",
           model:
-            "kjzl6hvfrbw6ca5al7nk5x3t3130vwa1ple8wv51gim3fzvfqowx46smz5xl50m",
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
           property: "profileID",
         },
       },
@@ -514,10 +515,10 @@ export const definition = {
     chatList: { type: "connection", name: "Chat" },
     chatMessageList: { type: "connection", name: "ChatMessage" },
     experienceList: { type: "connection", name: "Experience" },
-    postList: { type: "connection", name: "Post" },
-    followList: { type: "connection", name: "Follow" },
     educationList: { type: "connection", name: "Education" },
     assetList: { type: "connection", name: "Asset" },
+    followList: { type: "connection", name: "Follow" },
+    postList: { type: "connection", name: "Post" },
     postCommentList: { type: "connection", name: "PostComment" },
     postLikeList: { type: "connection", name: "PostLike" },
   },

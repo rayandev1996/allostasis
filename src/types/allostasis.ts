@@ -10,7 +10,9 @@ import { Socket } from '@heroiclabs/nakama-js';
 
 export interface AllostasisConstructor {
   nodeURL: string;
+  providerType?: PROVIDER_TYPE;
   provider?: any;
+  env?: ENV;
   chain?: Chain;
   infura?: {
     url: string;
@@ -25,6 +27,10 @@ export interface AllostasisConstructor {
   };
   debugLit?: boolean;
 }
+
+export type ENV = 'production' | 'stage'
+
+export type PROVIDER_TYPE = 'metamask' | 'safe'
 
 export interface Chain {
   name: string;
@@ -79,6 +85,7 @@ export interface Profile {
   followers?: Follow[];
   followersCount?: number;
   nakamaID?: string;
+  publicEncryptionDID?: string;
 }
 
 export enum AccountType {

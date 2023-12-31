@@ -6,6 +6,7 @@ import { LitNodeClient } from '@lit-protocol/lit-node-client';
 import { Web3Provider } from '@ethersproject/providers';
 import { IPFSHTTPClient } from 'kubo-rpc-client';
 import { Client, Session } from '@heroiclabs/nakama-js';
+import { DID } from 'dids';
 export default class Allostasis<TCommunity extends keyof Communities = keyof Communities> {
     private community;
     nodeURL: string;
@@ -20,15 +21,19 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
     pvtKey: any;
     nakamaClient: Client;
     nakamaSession: Session;
+    encryptionDid: DID;
+    authenticatedEncryptionDid: string;
     constructor(community: TCommunity, options: AllostasisConstructor);
     connect(): Promise<{
         did: any;
         address: string;
+        authenticatedEncryptionDid: string;
     }>;
     disconnect(address?: string): Promise<boolean>;
     isConnected(): Promise<{
         did: any;
         address: string;
+        authenticatedEncryptionDid: string;
     }>;
     createOrUpdateProfile(params: ProfileTypeBasedOnCommunities<TCommunity>): Promise<ProfileTypeBasedOnCommunities<TCommunity>>;
     createEducation: (params: {
@@ -158,6 +163,7 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
         chatID: string;
         profileID: string;
         messageType: string;
-        unifiedAccessControlConditions?: UnifiedAccessControlConditions;
+        encryptionDid?: string[];
+        publicEncryptionDIDs?: string[];
     }): Promise<ChatMessage>;
 }

@@ -72,6 +72,7 @@ export interface Profile {
     followers?: Follow[];
     followersCount?: number;
     nakamaID?: string;
+    publicEncryptionDID?: string;
 }
 export declare enum AccountType {
     PERSONAL = "PERSONAL",

@@ -12,7 +12,9 @@ import {
   Education,
   Experience,
   Chat,
-  ChatMessage
+  ChatMessage,
+  ENV,
+  PROVIDER_TYPE
 } from './types/allostasis';
 import { GreeniaProfile } from './types/greenia';
 import { CeramicClient } from '@ceramicnetwork/http-client';
@@ -20,12 +22,12 @@ import { ComposeClient } from '@composedb/client';
 import * as LitJsSdk from '@lit-protocol/lit-node-client';
 import { LitNodeClient } from '@lit-protocol/lit-node-client';
 import { definition } from './constants/definition';
+import { definition as definitionStage } from './constants/definition-stage';
 import { RuntimeCompositeDefinition } from '@composedb/types';
 import { Store } from './utils/store';
 import { getAddressFromDid, getAuthMethod } from './utils/did-provider';
 import { DIDSession } from 'did-session';
 import { Web3Provider } from '@ethersproject/providers';
-import { ethConnect } from '@lit-protocol/auth-browser';
 import _ from 'lodash';
 import dayjs from 'dayjs';
 import { blobToBase64, buf2hex, decodeB64, getAuthSig } from './utils/lit';
@@ -33,11 +35,18 @@ import { create as createIPFS, IPFSHTTPClient } from 'kubo-rpc-client';
 import { ethers } from 'ethers';
 import { Client, Session } from '@heroiclabs/nakama-js';
 import { v4 as uuidv4 } from 'uuid';
+import * as u8a from 'uint8arrays';
+import { hash } from '@stablelib/sha256';
+import { DID } from 'dids';
+import { Ed25519Provider } from 'key-did-provider-ed25519';
+import KeyResolver from 'key-did-resolver';
 
 export default class Allostasis<
   TCommunity extends keyof Communities = keyof Communities
 > {
-  private community: TCommunity;
+  public community: TCommunity;
+  public providerType: PROVIDER_TYPE;
+  public env: ENV;
   public nodeURL: string;
   public provider: any;
   public chain: Chain;
@@ -50,6 +59,8 @@ export default class Allostasis<
   public pvtKey: any;
   public nakamaClient: Client;
   public nakamaSession: Session;
+  public encryptionDid: DID;
+  public authenticatedEncryptionDid: string;
 
   constructor(community: TCommunity, options: AllostasisConstructor) {
     this.nodeURL = options.nodeURL;
@@ -59,6 +70,18 @@ export default class Allostasis<
       this.chain = options.chain;
     } else {
       this.chain = { name: 'mumbai', id: 80001 };
+    }
+
+    if (options.env) {
+      this.env = options.env;
+    } else {
+      this.env = 'production';
+    }
+
+    if (options.providerType) {
+      this.providerType = options.providerType;
+    } else {
+      this.providerType = 'metamask';
     }
 
     if (!options.provider) {
@@ -87,13 +110,16 @@ export default class Allostasis<
 
     this.composeClient = new ComposeClient({
       ceramic: options.nodeURL,
-      definition: definition as RuntimeCompositeDefinition
+      definition:
+        this.env === 'production'
+          ? (definition as RuntimeCompositeDefinition)
+          : (definitionStage as RuntimeCompositeDefinition)
     });
 
-    this.lit = new LitJsSdk.LitNodeClient({
-      alertWhenUnauthorized: false,
-      debug: options.debugLit ?? false
-    });
+    // this.lit = new LitJsSdk.LitNodeClient({
+    //   alertWhenUnauthorized: false,
+    //   debug: options.debugLit ?? false
+    // });
 
     if (options.infura) {
       this.ipfs = createIPFS({
@@ -113,13 +139,18 @@ export default class Allostasis<
    ** Connect the user
    */
 
-  async connect(): Promise<{ did: any; address: string }> {
+  async connect(): Promise<{
+    did: any;
+    address: string;
+    authenticatedEncryptionDid: string;
+  }> {
     return new Promise(async (resolve, reject) => {
       const store = new Store();
-      await this.lit.connect();
+      // await this.lit.connect();
 
       try {
         if (
+          this.providerType === 'metamask' &&
           this.chain.rpcURLs != null &&
           this.chain.blockExplorerUrls != null &&
           this.chain.currency != null
@@ -142,10 +173,12 @@ export default class Allostasis<
           });
         }
 
-        await this.provider.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: `0x${this.chain.id.toString(16)}` }]
-        });
+        if (this.providerType === 'metamask') {
+          await this.provider.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: `0x${this.chain.id.toString(16)}` }]
+          });
+        }
 
         const { authMethod, address } = await getAuthMethod(
           this.provider,
@@ -160,60 +193,88 @@ export default class Allostasis<
           const sessionString = session.serialize();
           await store.setItem('ceramic-session', sessionString);
 
-          const _userAuthSig = await store.getItem(
-            'lit-auth-signature-' + address
-          );
-          if (_userAuthSig) {
-            await store.setItem('lit-auth-signature', _userAuthSig);
-          }
+          // const _userAuthSig = await store.getItem(
+          //   'lit-auth-signature-' + address
+          // );
+          // if (_userAuthSig) {
+          //   await store.setItem('lit-auth-signature', _userAuthSig);
+          // }
 
-          if (
-            !_userAuthSig ||
-            _userAuthSig == '' ||
-            _userAuthSig == undefined
-          ) {
-            const web3 = new Web3Provider(this.provider);
-            const { chainId } = await web3.getNetwork();
+          // if (
+          //   !_userAuthSig ||
+          //   _userAuthSig == '' ||
+          //   _userAuthSig == undefined
+          // ) {
+          //   const web3 = new Web3Provider(this.provider);
+          //   const { chainId } = await web3.getNetwork();
 
-            await ethConnect.signAndSaveAuthMessage({
-              web3,
-              account: address,
-              chainId,
-              resources: null,
-              expiration: new Date(
-                Date.now() + 1000 * 60 * 60 * 24
-              ).toISOString()
-            });
+          //   await ethConnect.signAndSaveAuthMessage({
+          //     web3,
+          //     account: address,
+          //     chainId,
+          //     resources: null,
+          //     expiration: new Date(
+          //       Date.now() + 1000 * 60 * 60 * 24
+          //     ).toISOString()
+          //   });
 
-            const _authSig = await store.getItem('lit-auth-signature');
-            const authSig = JSON.parse(_authSig ?? '');
-            if (authSig && authSig != '') {
-              await store.setItem(
-                'lit-auth-signature-' + address,
-                JSON.stringify(authSig)
-              );
-            }
-          }
+          //   const _authSig = await store.getItem('lit-auth-signature');
+          //   const authSig = JSON.parse(_authSig ?? '');
+          //   if (authSig && authSig != '') {
+          //     await store.setItem(
+          //       'lit-auth-signature-' + address,
+          //       JSON.stringify(authSig)
+          //     );
+          //   }
+          // }
 
           this.ethersProvider
             .send('eth_requestAccounts', [])
-            .then(async () => {
+            .then(async (accounts) => {
               await this.ceramic.setDID(session.did);
               this.composeClient.setDID(session.did);
 
               this.ethersAddress = address;
 
+              // authenticate nakama
               if (this.nakamaClient) {
                 try {
-                  this.nakamaSession = await this.nakamaClient.authenticateCustom(
-                    session.did?.parent.split(':')[4] ?? uuidv4()
-                  );
+                  this.nakamaSession =
+                    await this.nakamaClient.authenticateCustom(
+                      session.did?.parent.split(':')[4] ?? uuidv4()
+                    );
                 } catch (e) {
                   // nakama failed
                 }
               }
 
-              resolve({ did: session.did.id, address: address ?? '' });
+              // get encryption DID
+              const entropy = await this.provider.request({
+                method: 'personal_sign',
+                params: [
+                  u8a.toString(
+                    u8a.fromString(
+                      'Give this app permission to read or write your private data'
+                    ),
+                    'base16'
+                  ),
+                  accounts[0]
+                ]
+              });
+              const seed = hash(u8a.fromString(entropy.slice(2), 'base16'));
+              this.encryptionDid = new DID({
+                resolver: KeyResolver.getResolver(),
+                provider: new Ed25519Provider(seed)
+              });
+              this.authenticatedEncryptionDid =
+                await this.encryptionDid.authenticate();
+
+              // return the response
+              resolve({
+                did: session.did.id,
+                address: address ?? '',
+                authenticatedEncryptionDid: this.authenticatedEncryptionDid
+              });
             })
             .catch((e) => {
               store.removeItem('ceramic-session');
@@ -258,11 +319,15 @@ export default class Allostasis<
    ** Check the connection status of the user
    */
 
-  async isConnected(): Promise<{ did: any; address: string }> {
+  async isConnected(): Promise<{
+    did: any;
+    address: string;
+    authenticatedEncryptionDid: string;
+  }> {
     return new Promise(async (resolve, reject) => {
       await this.ceramic;
       const store = new Store();
-      await this.lit.connect();
+      // await this.lit.connect();
 
       const sessionString = await store.getItem('ceramic-session');
 
@@ -272,16 +337,16 @@ export default class Allostasis<
 
         const { address } = getAddressFromDid(session.id);
 
-        const _userAuthSig = await store.getItem(
-          'lit-auth-signature-' + address
-        );
-        if (_userAuthSig) {
-          await store.setItem('lit-auth-signature', _userAuthSig);
-        }
+        // const _userAuthSig = await store.getItem(
+        //   'lit-auth-signature-' + address
+        // );
+        // if (_userAuthSig) {
+        //   await store.setItem('lit-auth-signature', _userAuthSig);
+        // }
 
         this.ethersProvider
           .send('eth_requestAccounts', [])
-          .then(async () => {
+          .then(async (accounts) => {
             await this.ceramic.setDID(session.did);
             this.composeClient.setDID(session.did);
 
@@ -296,8 +361,33 @@ export default class Allostasis<
             } catch (e) {
               // nakama failed
             }
-            
-            resolve({ did: session.did.id, address: address ?? '' });
+
+            // get encryption DID
+            const entropy = await this.provider.request({
+              method: 'personal_sign',
+              params: [
+                u8a.toString(
+                  u8a.fromString(
+                    'Give this app permission to read or write your private data'
+                  ),
+                  'base16'
+                ),
+                accounts[0]
+              ]
+            });
+            const seed = hash(u8a.fromString(entropy.slice(2), 'base16'));
+            this.encryptionDid = new DID({
+              resolver: KeyResolver.getResolver(),
+              provider: new Ed25519Provider(seed)
+            });
+            this.authenticatedEncryptionDid =
+              await this.encryptionDid.authenticate();
+
+            resolve({
+              did: session.did.id,
+              address: address ?? '',
+              authenticatedEncryptionDid: this.authenticatedEncryptionDid
+            });
           })
           .catch((e) => {
             store.removeItem('ceramic-session');
@@ -344,6 +434,7 @@ export default class Allostasis<
                         x === 'phoneNumber' ||
                         x === 'address' ||
                         x === 'socialLinks' ||
+                        x === 'publicEncryptionDID' ||
                         x === 'nakamaID'
                     )
                     .map((key) => {
@@ -381,6 +472,7 @@ export default class Allostasis<
                   address
                   socialLinks
                   nakamaID
+                  publicEncryptionDID
                 }
               }
             }
@@ -725,6 +817,7 @@ export default class Allostasis<
                   address
                   socialLinks
                   nakamaID
+                  publicEncryptionDID
                   experiences(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                     edges {
                       node {
@@ -901,6 +994,7 @@ export default class Allostasis<
                                 avatar
                                 bio
                                 nakamaID
+                                publicEncryptionDID
                               }
                               profileID
                               unifiedAccessControlConditions
@@ -917,6 +1011,7 @@ export default class Allostasis<
                           avatar
                           bio
                           nakamaID
+                          publicEncryptionDID
                         }
                         recipientProfile {
                           creator {
@@ -927,6 +1022,7 @@ export default class Allostasis<
                           avatar
                           bio
                           nakamaID
+                          publicEncryptionDID
                         }
                       }
                     }
@@ -962,6 +1058,7 @@ export default class Allostasis<
                                 avatar
                                 bio
                                 nakamaID
+                                publicEncryptionDID
                               }
                               profileID
                               unifiedAccessControlConditions
@@ -978,6 +1075,7 @@ export default class Allostasis<
                           avatar
                           bio
                           nakamaID
+                          publicEncryptionDID
                         }
                         recipientProfile {
                           creator {
@@ -988,6 +1086,7 @@ export default class Allostasis<
                           avatar
                           bio
                           nakamaID
+                          publicEncryptionDID
                         }
                       }
                     }
@@ -1167,6 +1266,7 @@ export default class Allostasis<
                 address
                 socialLinks
                 nakamaID
+                publicEncryptionDID
                 experiences(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                   edges {
                     node {
@@ -1415,6 +1515,7 @@ export default class Allostasis<
                   address
                   socialLinks
                   nakamaID
+                  publicEncryptionDID
                   experiences(filters: { where: { isDeleted: { equalTo: false } } }, last: 300) {
                     edges {
                       node {
@@ -2142,6 +2243,7 @@ export default class Allostasis<
                     displayName
                     avatar
                     nakamaID
+                    publicEncryptionDID
                     bio
                     postsCount(filters: { where: { isDeleted: { equalTo: false } } })
                     followersCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -2168,6 +2270,7 @@ export default class Allostasis<
                           displayName
                           avatar
                           nakamaID
+                          publicEncryptionDID
                           bio
                         }
                       }
@@ -2191,6 +2294,7 @@ export default class Allostasis<
                           displayName
                           avatar
                           nakamaID
+                          publicEncryptionDID
                           bio
                         }
                       }
@@ -2310,6 +2414,7 @@ export default class Allostasis<
                   displayName
                   avatar
                   nakamaID
+                  publicEncryptionDID
                   bio
                   postsCount(filters: { where: { isDeleted: { equalTo: false } } })
                   followersCount(filters: { where: { isDeleted: { equalTo: false } } })
@@ -2336,6 +2441,7 @@ export default class Allostasis<
                         displayName
                         avatar
                         nakamaID
+                        publicEncryptionDID
                         bio
                       }
                     }
@@ -2359,6 +2465,7 @@ export default class Allostasis<
                         displayName
                         avatar
                         nakamaID
+                        publicEncryptionDID
                         bio
                       }
                     }
@@ -2461,6 +2568,7 @@ export default class Allostasis<
                   displayName
                   avatar
                   nakamaID
+                  publicEncryptionDID
                   bio
                 }
                 isDeleted
@@ -2529,6 +2637,7 @@ export default class Allostasis<
                     displayName
                     avatar
                     nakamaID
+                    publicEncryptionDID
                     bio
                   }
                   isDeleted
@@ -2895,6 +3004,7 @@ export default class Allostasis<
                           avatar
                           bio
                           nakamaID
+                          publicEncryptionDID
                         }
                         profileID
                         unifiedAccessControlConditions
@@ -2911,6 +3021,7 @@ export default class Allostasis<
                     avatar
                     bio
                     nakamaID
+                    publicEncryptionDID
                   }
                   recipientProfile {
                     creator {
@@ -2921,6 +3032,7 @@ export default class Allostasis<
                     avatar
                     bio
                     nakamaID
+                    publicEncryptionDID
                   }  
                 }
               }
@@ -2983,6 +3095,7 @@ export default class Allostasis<
                             avatar
                             bio
                             nakamaID
+                            publicEncryptionDID
                           }
                           profileID
                           unifiedAccessControlConditions
@@ -2999,6 +3112,7 @@ export default class Allostasis<
                       avatar
                       bio
                       nakamaID
+                      publicEncryptionDID
                     }
                     recipientProfile {
                       creator {
@@ -3009,6 +3123,7 @@ export default class Allostasis<
                       avatar
                       bio
                       nakamaID
+                      publicEncryptionDID
                     }
                   }
                 }
@@ -3081,6 +3196,7 @@ export default class Allostasis<
                           avatar
                           bio
                           nakamaID
+                          publicEncryptionDID
                         }
                         profileID
                         unifiedAccessControlConditions
@@ -3097,6 +3213,7 @@ export default class Allostasis<
                     avatar
                     bio
                     nakamaID
+                    publicEncryptionDID
                   }
                   recipientProfile {
                     creator {
@@ -3107,6 +3224,7 @@ export default class Allostasis<
                     avatar
                     bio
                     nakamaID
+                    publicEncryptionDID
                   }  
                 }
                 cursor
@@ -3147,16 +3265,25 @@ export default class Allostasis<
     chatID: string;
     profileID: string;
     messageType: string;
-    unifiedAccessControlConditions?: UnifiedAccessControlConditions;
+    encryptionDid?: string[];
+    publicEncryptionDIDs?: string[];
   }): Promise<ChatMessage> {
     return new Promise(async (resolve, reject) => {
       try {
-        let encryption;
-        if (params.unifiedAccessControlConditions != null) {
-          encryption = await this.encryptContent(
-            params.content,
-            params.unifiedAccessControlConditions
-          );
+        let body = params.content;
+        if (
+          params.publicEncryptionDIDs != null &&
+          params.publicEncryptionDIDs.length > 0
+        ) {
+          if (this.encryptionDid) {
+            const jwe = await this.encryptionDid.createDagJWE(
+              { body },
+              params.publicEncryptionDIDs
+            );
+            body = JSON.stringify(jwe).replace(/"/g, '`');
+          } else {
+            reject('Encryption DID is not set');
+          }
         }
 
         const create = await this.composeClient.executeQuery<{
@@ -3165,9 +3292,7 @@ export default class Allostasis<
           mutation {
             createChatMessage(input: {
               content: {
-                body: "${encryption ? encryption.encryptedString : params.content}",
-                unifiedAccessControlConditions: "${encryption ? encryption.unifiedAccessControlConditions : 'null'}",
-                encryptedSymmetricKey: "${encryption ? encryption.encryptedSymmetricKey : 'null'}",
+                body: "${body}",
                 profileID: "${params.profileID}",
                 chatID: "${params.chatID}",
                 messageType: "${params.messageType}",
@@ -3193,6 +3318,7 @@ export default class Allostasis<
                   avatar
                   bio
                   nakamaID
+                  publicEncryptionDID
                 }
                 profileID
                 unifiedAccessControlConditions

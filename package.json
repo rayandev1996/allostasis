@@ -1,11 +1,16 @@
 {
   "name": "allostasis-js-sdk",
-  "version": "1.1.19",
+  "version": "1.1.30",
   "description": "Allostasis data management",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "build": "npx tsc",
-    "bp": "npm run build && npm publish"
+    "vp": "npm version patch",
+    "vm": "npm version minor",
+    "bp": "npm run build && npm publish",
+    "bpp": "npm run vp && npm run bp",
+    "bpm": "npm run vm && npm run bp"
   },
   "repository": {
     "type": "git",
@@ -33,13 +38,21 @@
     "@ethersproject/providers": "^5.7.2",
     "@heroiclabs/nakama-js": "^2.7.1",
     "@lit-protocol/lit-node-client": "^2.2.47",
+    "@stablelib/sha256": "^1.0.1",
     "blob-to-buffer": "^1.2.9",
     "dayjs": "^1.11.9",
     "did-session": "^2.0.1",
+    "dids": "^4.0.4",
     "ethers": "^5.7.2",
     "ipfs-http-client": "^60.0.0",
+    "key-did-provider-ed25519": "^3.0.2",
+    "key-did-resolver": "^3.0.0",
     "kubo-rpc-client": "^3.0.1",
     "lodash": "^4.17.21",
+    "uint8arrays": "^5.0.0",
     "uuid": "^9.0.1"
-  }
+  },
+  "files": [
+    "/lib"
+  ]
 }

@@ -24,7 +24,13 @@ export declare const definition: {
                 type: string;
             };
         };
-        Post: {
+        Education: {
+            id: string;
+            accountRelation: {
+                type: string;
+            };
+        };
+        Asset: {
             id: string;
             accountRelation: {
                 type: string;
@@ -36,13 +42,7 @@ export declare const definition: {
                 type: string;
             };
         };
-        Education: {
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        Asset: {
+        Post: {
             id: string;
             accountRelation: {
                 type: string;
@@ -127,6 +127,10 @@ export declare const definition: {
                     type: string;
                     required: boolean;
                 };
+            };
+            publicEncryptionDID: {
+                type: string;
+                required: boolean;
             };
             creator: {
                 type: string;
@@ -438,6 +442,149 @@ export declare const definition: {
                 };
             };
         };
+        Education: {
+            city: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            title: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            school: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            endDate: {
+                type: string;
+                required: boolean;
+            };
+            isDeleted: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            profileID: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            startDate: {
+                type: string;
+                required: boolean;
+            };
+            description: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            creator: {
+                type: string;
+                viewType: string;
+            };
+            profile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+        };
+        Asset: {
+            tags: {
+                type: string;
+                required: boolean;
+                item: {
+                    type: string;
+                    required: boolean;
+                };
+            };
+            image: {
+                type: string;
+                required: boolean;
+            };
+            title: {
+                type: string;
+                required: boolean;
+            };
+            isDeleted: {
+                type: string;
+                required: boolean;
+            };
+            profileID: {
+                type: string;
+                required: boolean;
+            };
+            description: {
+                type: string;
+                required: boolean;
+            };
+            externalURL: {
+                type: string;
+                required: boolean;
+            };
+            animationURL: {
+                type: string;
+                required: boolean;
+            };
+            creator: {
+                type: string;
+                viewType: string;
+            };
+            profile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+        };
+        Follow: {
+            isDeleted: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            profileID: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            targetProfileID: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            creator: {
+                type: string;
+                viewType: string;
+            };
+            profile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            targetProfile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+        };
         Post: {
             body: {
                 type: string;
@@ -579,149 +726,6 @@ export declare const definition: {
                 };
             };
         };
-        Follow: {
-            isDeleted: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            targetProfileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            targetProfile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
-        Education: {
-            city: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            title: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            school: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            endDate: {
-                type: string;
-                required: boolean;
-            };
-            isDeleted: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            startDate: {
-                type: string;
-                required: boolean;
-            };
-            description: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
-        Asset: {
-            tags: {
-                type: string;
-                required: boolean;
-                item: {
-                    type: string;
-                    required: boolean;
-                };
-            };
-            image: {
-                type: string;
-                required: boolean;
-            };
-            title: {
-                type: string;
-                required: boolean;
-            };
-            isDeleted: {
-                type: string;
-                required: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-            };
-            description: {
-                type: string;
-                required: boolean;
-            };
-            externalURL: {
-                type: string;
-                required: boolean;
-            };
-            animationURL: {
-                type: string;
-                required: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
         PostComment: {
             postID: {
                 type: string;
@@ -834,7 +838,11 @@ export declare const definition: {
             type: string;
             name: string;
         };
-        postList: {
+        educationList: {
+            type: string;
+            name: string;
+        };
+        assetList: {
             type: string;
             name: string;
         };
@@ -842,11 +850,7 @@ export declare const definition: {
             type: string;
             name: string;
         };
-        educationList: {
-            type: string;
-            name: string;
-        };
-        assetList: {
+        postList: {
             type: string;
             name: string;
         };
