@@ -1,20 +1,19 @@
-import { UnifiedAccessControlConditions } from '@lit-protocol/types/src/lib/types';
-import { AllostasisConstructor, Chain, Communities, Profile, ProfileTypeBasedOnCommunities, Post, PostComment, Education, Experience, Chat, ChatMessage } from './types/allostasis';
+import { AllostasisConstructor, Chain, Communities, Profile, ProfileTypeBasedOnCommunities, Post, PostComment, Education, Experience, Chat, ChatMessage, ENV, PROVIDER_TYPE } from './types/allostasis';
 import { CeramicClient } from '@ceramicnetwork/http-client';
 import { ComposeClient } from '@composedb/client';
-import { LitNodeClient } from '@lit-protocol/lit-node-client';
 import { Web3Provider } from '@ethersproject/providers';
 import { IPFSHTTPClient } from 'kubo-rpc-client';
 import { Client, Session } from '@heroiclabs/nakama-js';
 import { DID } from 'dids';
 export default class Allostasis<TCommunity extends keyof Communities = keyof Communities> {
-    private community;
+    community: TCommunity;
+    providerType: PROVIDER_TYPE;
+    env: ENV;
     nodeURL: string;
     provider: any;
     chain: Chain;
     ceramic: CeramicClient;
     composeClient: ComposeClient;
-    lit: LitNodeClient;
     ipfs: IPFSHTTPClient;
     ethersProvider: Web3Provider;
     ethersAddress: string;
@@ -29,13 +28,18 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
         address: string;
         authenticatedEncryptionDid: string;
     }>;
+    connectManual(session: any): Promise<{
+        did: any;
+    }>;
     disconnect(address?: string): Promise<boolean>;
     isConnected(): Promise<{
         did: any;
         address: string;
         authenticatedEncryptionDid: string;
     }>;
-    createOrUpdateProfile(params: ProfileTypeBasedOnCommunities<TCommunity>): Promise<ProfileTypeBasedOnCommunities<TCommunity>>;
+    createOrUpdateProfile(params: Omit<ProfileTypeBasedOnCommunities<TCommunity>, 'publicEncryptionDID'> & {
+        publicEncryptionDID: string;
+    }): Promise<ProfileTypeBasedOnCommunities<TCommunity>>;
     createEducation: (params: {
         title: string;
         school: string;
@@ -89,12 +93,6 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
         cursor: string;
     }>;
     getCommunityUserProfile(id: string): Promise<ProfileTypeBasedOnCommunities<TCommunity>>;
-    encryptContent(content: string, unifiedAccessControlConditions: UnifiedAccessControlConditions): Promise<{
-        encryptedString: string;
-        encryptedSymmetricKey: string;
-        unifiedAccessControlConditions: string;
-    }>;
-    decryptContent(content: string, unifiedAccessControlConditions: string, encryptedSymmetricKey: string): Promise<string>;
     createPost(params: {
         body: string;
         tags?: string[];

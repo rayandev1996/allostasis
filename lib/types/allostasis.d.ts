@@ -7,7 +7,9 @@ import { WeariaProfile } from './wearia';
 import { Socket } from '@heroiclabs/nakama-js';
 export interface AllostasisConstructor {
     nodeURL: string;
+    providerType?: PROVIDER_TYPE;
     provider?: any;
+    env?: ENV;
     chain?: Chain;
     infura?: {
         url: string;
@@ -22,6 +24,8 @@ export interface AllostasisConstructor {
     };
     debugLit?: boolean;
 }
+export type ENV = 'production' | 'stage';
+export type PROVIDER_TYPE = 'metamask' | 'safe';
 export interface Chain {
     name: string;
     id: number | string;
@@ -72,7 +76,9 @@ export interface Profile {
     followers?: Follow[];
     followersCount?: number;
     nakamaID?: string;
-    publicEncryptionDID?: string;
+    publicEncryptionDID?: {
+        id: string;
+    };
 }
 export declare enum AccountType {
     PERSONAL = "PERSONAL",
@@ -101,6 +107,9 @@ export interface Chat {
         avatar?: string;
         bio?: string;
         nakamaID?: string;
+        publicEncryptionDID?: {
+            id: string;
+        };
     };
     recipientProfile?: {
         creator?: {
@@ -111,6 +120,9 @@ export interface Chat {
         avatar?: string;
         bio?: string;
         nakamaID?: string;
+        publicEncryptionDID?: {
+            id: string;
+        };
     };
     messages?: ChatMessage[];
 }
@@ -134,6 +146,9 @@ export interface ChatMessage {
         avatar?: string;
         bio?: string;
         nakamaID?: string;
+        publicEncryptionDID?: {
+            id: string;
+        };
     };
 }
 export interface Education {

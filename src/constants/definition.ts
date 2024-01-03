@@ -13,12 +13,16 @@ export const definition = {
       id: "kjzl6hvfrbw6c5s8i33o6mzl2wzz5pa9ceq8opp57mzs2okkko68auvemtbidpf",
       accountRelation: { type: "list" },
     },
-    Experience: {
-      id: "kjzl6hvfrbw6c68di6r9dlueav2mceh860s6ah0zzixx6ny7efy6q3cb3w7mfbw",
+    Post: {
+      id: "kjzl6hvfrbw6c7fpztqw008g6or3z7ys740k8u8n5uz3mbvzssofrvq3lsz6zsv",
       accountRelation: { type: "list" },
     },
     Education: {
       id: "kjzl6hvfrbw6c8a11ae2ydekm324muff0uqo9l9k1dxjkhsltxj1o1uu2u24ykl",
+      accountRelation: { type: "list" },
+    },
+    Experience: {
+      id: "kjzl6hvfrbw6c68di6r9dlueav2mceh860s6ah0zzixx6ny7efy6q3cb3w7mfbw",
       accountRelation: { type: "list" },
     },
     Asset: {
@@ -27,10 +31,6 @@ export const definition = {
     },
     Follow: {
       id: "kjzl6hvfrbw6c5jllzjzqfor1ns0uhgmvrzes32c2pv3x8kr5wvtr7f2peimgaq",
-      accountRelation: { type: "list" },
-    },
-    Post: {
-      id: "kjzl6hvfrbw6c7fpztqw008g6or3z7ys740k8u8n5uz3mbvzssofrvq3lsz6zsv",
       accountRelation: { type: "list" },
     },
     PostComment: {
@@ -288,99 +288,6 @@ export const definition = {
         },
       },
     },
-    Experience: {
-      city: { type: "string", required: true, indexed: true },
-      title: { type: "string", required: true, indexed: true },
-      company: { type: "string", required: true, indexed: true },
-      endDate: { type: "date", required: false },
-      isDeleted: { type: "boolean", required: true, indexed: true },
-      profileID: { type: "streamid", required: true, indexed: true },
-      startDate: { type: "date", required: true },
-      description: { type: "string", required: true, indexed: true },
-      creator: { type: "view", viewType: "documentAccount" },
-      profile: {
-        type: "view",
-        viewType: "relation",
-        relation: {
-          source: "document",
-          model:
-            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
-          property: "profileID",
-        },
-      },
-    },
-    Education: {
-      city: { type: "string", required: true, indexed: true },
-      title: { type: "string", required: true, indexed: true },
-      school: { type: "string", required: true, indexed: true },
-      endDate: { type: "date", required: false },
-      isDeleted: { type: "boolean", required: true, indexed: true },
-      profileID: { type: "streamid", required: true, indexed: true },
-      startDate: { type: "date", required: true },
-      description: { type: "string", required: true, indexed: true },
-      creator: { type: "view", viewType: "documentAccount" },
-      profile: {
-        type: "view",
-        viewType: "relation",
-        relation: {
-          source: "document",
-          model:
-            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
-          property: "profileID",
-        },
-      },
-    },
-    Asset: {
-      tags: {
-        type: "list",
-        required: false,
-        item: { type: "string", required: false },
-      },
-      image: { type: "string", required: false },
-      title: { type: "string", required: true },
-      isDeleted: { type: "boolean", required: true },
-      profileID: { type: "streamid", required: true },
-      description: { type: "string", required: true },
-      externalURL: { type: "string", required: false },
-      animationURL: { type: "string", required: false },
-      creator: { type: "view", viewType: "documentAccount" },
-      profile: {
-        type: "view",
-        viewType: "relation",
-        relation: {
-          source: "document",
-          model:
-            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
-          property: "profileID",
-        },
-      },
-    },
-    Follow: {
-      isDeleted: { type: "boolean", required: true, indexed: true },
-      profileID: { type: "streamid", required: true, indexed: true },
-      targetProfileID: { type: "streamid", required: true, indexed: true },
-      creator: { type: "view", viewType: "documentAccount" },
-      profile: {
-        type: "view",
-        viewType: "relation",
-        relation: {
-          source: "document",
-          model:
-            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
-          property: "profileID",
-        },
-      },
-      targetProfile: {
-        type: "view",
-        viewType: "relation",
-        relation: {
-          source: "document",
-          model:
-            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
-          property: "targetProfileID",
-        },
-      },
-    },
     Post: {
       body: { type: "string", required: true, indexed: true },
       tag1: { type: "string", required: false, indexed: true },
@@ -453,6 +360,99 @@ export const definition = {
         },
       },
     },
+    Education: {
+      city: { type: "string", required: true, indexed: true },
+      title: { type: "string", required: true, indexed: true },
+      school: { type: "string", required: true, indexed: true },
+      endDate: { type: "date", required: false },
+      isDeleted: { type: "boolean", required: true, indexed: true },
+      profileID: { type: "streamid", required: true, indexed: true },
+      startDate: { type: "date", required: true },
+      description: { type: "string", required: true, indexed: true },
+      creator: { type: "view", viewType: "documentAccount" },
+      profile: {
+        type: "view",
+        viewType: "relation",
+        relation: {
+          source: "document",
+          model:
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
+          property: "profileID",
+        },
+      },
+    },
+    Experience: {
+      city: { type: "string", required: true, indexed: true },
+      title: { type: "string", required: true, indexed: true },
+      company: { type: "string", required: true, indexed: true },
+      endDate: { type: "date", required: false },
+      isDeleted: { type: "boolean", required: true, indexed: true },
+      profileID: { type: "streamid", required: true, indexed: true },
+      startDate: { type: "date", required: true },
+      description: { type: "string", required: true, indexed: true },
+      creator: { type: "view", viewType: "documentAccount" },
+      profile: {
+        type: "view",
+        viewType: "relation",
+        relation: {
+          source: "document",
+          model:
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
+          property: "profileID",
+        },
+      },
+    },
+    Asset: {
+      tags: {
+        type: "list",
+        required: false,
+        item: { type: "string", required: false },
+      },
+      image: { type: "string", required: false },
+      title: { type: "string", required: true },
+      isDeleted: { type: "boolean", required: true },
+      profileID: { type: "streamid", required: true },
+      description: { type: "string", required: true },
+      externalURL: { type: "string", required: false },
+      animationURL: { type: "string", required: false },
+      creator: { type: "view", viewType: "documentAccount" },
+      profile: {
+        type: "view",
+        viewType: "relation",
+        relation: {
+          source: "document",
+          model:
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
+          property: "profileID",
+        },
+      },
+    },
+    Follow: {
+      isDeleted: { type: "boolean", required: true, indexed: true },
+      profileID: { type: "streamid", required: true, indexed: true },
+      targetProfileID: { type: "streamid", required: true, indexed: true },
+      creator: { type: "view", viewType: "documentAccount" },
+      profile: {
+        type: "view",
+        viewType: "relation",
+        relation: {
+          source: "document",
+          model:
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
+          property: "profileID",
+        },
+      },
+      targetProfile: {
+        type: "view",
+        viewType: "relation",
+        relation: {
+          source: "document",
+          model:
+            "kjzl6hvfrbw6c8u49qgtlpzw0hxy4rc0fbtis2cohgi64ei2xx3u5m2waubjzvh",
+          property: "targetProfileID",
+        },
+      },
+    },
     PostComment: {
       postID: { type: "streamid", required: true, indexed: true },
       content: { type: "string", required: true, indexed: true },
@@ -514,11 +514,11 @@ export const definition = {
     profile: { type: "node", name: "Profile" },
     chatList: { type: "connection", name: "Chat" },
     chatMessageList: { type: "connection", name: "ChatMessage" },
-    experienceList: { type: "connection", name: "Experience" },
+    postList: { type: "connection", name: "Post" },
     educationList: { type: "connection", name: "Education" },
+    experienceList: { type: "connection", name: "Experience" },
     assetList: { type: "connection", name: "Asset" },
     followList: { type: "connection", name: "Follow" },
-    postList: { type: "connection", name: "Post" },
     postCommentList: { type: "connection", name: "PostComment" },
     postLikeList: { type: "connection", name: "PostLike" },
   },

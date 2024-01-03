@@ -24,25 +24,25 @@ export declare const definition: {
                 type: string;
             };
         };
-        Education: {
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
         Experience: {
             id: string;
             accountRelation: {
                 type: string;
             };
         };
-        Asset: {
+        Education: {
             id: string;
             accountRelation: {
                 type: string;
             };
         };
         Follow: {
+            id: string;
+            accountRelation: {
+                type: string;
+            };
+        };
+        Asset: {
             id: string;
             accountRelation: {
                 type: string;
@@ -530,59 +530,6 @@ export declare const definition: {
                 };
             };
         };
-        Education: {
-            city: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            title: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            school: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            endDate: {
-                type: string;
-                required: boolean;
-            };
-            isDeleted: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            startDate: {
-                type: string;
-                required: boolean;
-            };
-            description: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
         Experience: {
             city: {
                 type: string;
@@ -636,42 +583,44 @@ export declare const definition: {
                 };
             };
         };
-        Asset: {
-            tags: {
+        Education: {
+            city: {
                 type: string;
                 required: boolean;
-                item: {
-                    type: string;
-                    required: boolean;
-                };
-            };
-            image: {
-                type: string;
-                required: boolean;
+                indexed: boolean;
             };
             title: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            school: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            endDate: {
                 type: string;
                 required: boolean;
             };
             isDeleted: {
                 type: string;
                 required: boolean;
+                indexed: boolean;
             };
             profileID: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            startDate: {
                 type: string;
                 required: boolean;
             };
             description: {
                 type: string;
                 required: boolean;
-            };
-            externalURL: {
-                type: string;
-                required: boolean;
-            };
-            animationURL: {
-                type: string;
-                required: boolean;
+                indexed: boolean;
             };
             creator: {
                 type: string;
@@ -717,6 +666,57 @@ export declare const definition: {
                 };
             };
             targetProfile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+        };
+        Asset: {
+            tags: {
+                type: string;
+                required: boolean;
+                item: {
+                    type: string;
+                    required: boolean;
+                };
+            };
+            image: {
+                type: string;
+                required: boolean;
+            };
+            title: {
+                type: string;
+                required: boolean;
+            };
+            isDeleted: {
+                type: string;
+                required: boolean;
+            };
+            profileID: {
+                type: string;
+                required: boolean;
+            };
+            description: {
+                type: string;
+                required: boolean;
+            };
+            externalURL: {
+                type: string;
+                required: boolean;
+            };
+            animationURL: {
+                type: string;
+                required: boolean;
+            };
+            creator: {
+                type: string;
+                viewType: string;
+            };
+            profile: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -838,19 +838,19 @@ export declare const definition: {
             type: string;
             name: string;
         };
-        educationList: {
-            type: string;
-            name: string;
-        };
         experienceList: {
             type: string;
             name: string;
         };
-        assetList: {
+        educationList: {
             type: string;
             name: string;
         };
         followList: {
+            type: string;
+            name: string;
+        };
+        assetList: {
             type: string;
             name: string;
         };

@@ -85,7 +85,9 @@ export interface Profile {
   followers?: Follow[];
   followersCount?: number;
   nakamaID?: string;
-  publicEncryptionDID?: string;
+  publicEncryptionDID?: {
+    id: string;
+  };
 }
 
 export enum AccountType {
@@ -117,6 +119,9 @@ export interface Chat {
     avatar?: string;
     bio?: string;
     nakamaID?: string;
+    publicEncryptionDID?: {
+      id: string;
+    };
   };
   recipientProfile?: {
     creator?: {
@@ -127,6 +132,9 @@ export interface Chat {
     avatar?: string;
     bio?: string;
     nakamaID?: string;
+    publicEncryptionDID?: {
+      id: string;
+    };
   };
   messages?: ChatMessage[];
 }
@@ -151,6 +159,9 @@ export interface ChatMessage {
     avatar?: string;
     bio?: string;
     nakamaID?: string;
+    publicEncryptionDID?: {
+      id: string;
+    };
   };
 }
 
