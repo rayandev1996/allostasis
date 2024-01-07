@@ -28,8 +28,10 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
         address: string;
         authenticatedEncryptionDid: string;
     }>;
-    connectManual(session: any): Promise<{
+    connectManual(provider: any, entropy: any): Promise<{
         did: any;
+        address: string;
+        authenticatedEncryptionDid: string;
     }>;
     disconnect(address?: string): Promise<boolean>;
     isConnected(): Promise<{
@@ -38,7 +40,7 @@ export default class Allostasis<TCommunity extends keyof Communities = keyof Com
         authenticatedEncryptionDid: string;
     }>;
     createOrUpdateProfile(params: Omit<ProfileTypeBasedOnCommunities<TCommunity>, 'publicEncryptionDID'> & {
-        publicEncryptionDID: string;
+        publicEncryptionDID?: string;
     }): Promise<ProfileTypeBasedOnCommunities<TCommunity>>;
     createEducation: (params: {
         title: string;

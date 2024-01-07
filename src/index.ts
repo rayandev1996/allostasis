@@ -246,35 +246,61 @@ export default class Allostasis<
    */
 
   async connectManual(
-    session: any
+    provider: any,
+    entropy: any
   ): Promise<{
     did: any;
+    address: string;
+    authenticatedEncryptionDid: string;
   }> {
     return new Promise(async (resolve, reject) => {
       const store = new Store();
 
       try {
-        const sessionString = session.serialize();
-        await store.setItem('ceramic-session', sessionString);
+        const { authMethod, address } = await getAuthMethod(
+          provider,
+          this.chain
+        );
 
-        await this.ceramic.setDID(session.did);
-        this.composeClient.setDID(session.did);
+        if (authMethod != null) {
+          const session = await DIDSession.authorize(authMethod, {
+            resources: this.composeClient.resources
+          });
 
-        // authenticate nakama
-        if (this.nakamaClient) {
-          try {
-            this.nakamaSession = await this.nakamaClient.authenticateCustom(
-              session.did?.parent.split(':')[4] ?? uuidv4()
-            );
-          } catch (e) {
-            // nakama failed
+          const sessionString = session.serialize();
+          await store.setItem('ceramic-session', sessionString);
+
+          await this.ceramic.setDID(session.did);
+          this.composeClient.setDID(session.did);
+
+          // authenticate nakama
+          if (this.nakamaClient) {
+            try {
+              this.nakamaSession = await this.nakamaClient.authenticateCustom(
+                session.did?.parent.split(':')[4] ?? uuidv4()
+              );
+            } catch (e) {
+              // nakama failed
+            }
           }
-        }
 
-        // return the response
-        resolve({
-          did: session.did.id
-        });
+          const seed = hash(uint8Array(entropy.slice(2)));
+          this.encryptionDid = new DID({
+            resolver: KeyResolver.getResolver(),
+            provider: new Ed25519Provider(seed)
+          });
+          this.authenticatedEncryptionDid =
+            await this.encryptionDid.authenticate();
+
+          // return the response
+          resolve({
+            did: session.did.id,
+            address: address ?? '',
+            authenticatedEncryptionDid: this.authenticatedEncryptionDid
+          });
+        } else {
+          reject('Auth method error');
+        }
       } catch (e) {
         store.removeItem('ceramic-session');
         reject(e);
@@ -387,7 +413,7 @@ export default class Allostasis<
     params: Omit<
       ProfileTypeBasedOnCommunities<TCommunity>,
       'publicEncryptionDID'
-    > & { publicEncryptionDID: string }
+    > & { publicEncryptionDID?: string }
   ): Promise<ProfileTypeBasedOnCommunities<TCommunity>> {
     return new Promise((resolve, reject) => {
       (async () => {
