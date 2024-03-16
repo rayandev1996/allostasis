@@ -14,6 +14,7 @@ export interface AllostasisConstructor {
   provider?: any;
   env?: ENV;
   chain?: Chain;
+  model?: SDK_MODEL;
   infura?: {
     url: string;
     projectId: string;
@@ -25,12 +26,13 @@ export interface AllostasisConstructor {
     key: string;
     useSSL: boolean;
   };
-  debugLit?: boolean;
 }
 
 export type ENV = 'production' | 'stage'
 
 export type PROVIDER_TYPE = 'metamask' | 'safe'
+
+export type SDK_MODEL = 'user' | 'startup' | 'platform'
 
 export interface Chain {
   name: string;
@@ -80,6 +82,8 @@ export interface Profile {
   experiences?: Experience[];
   posts?: Post[];
   postsCount?: number;
+  articles?: Article[];
+  articlesCount?: number;
   followings?: Follow[];
   followingsCount?: number;
   followers?: Follow[];
@@ -201,14 +205,11 @@ export interface Post {
   body?: string;
   createdAt?: any;
   isDeleted?: boolean;
-  isEncrypted?: boolean;
   profileID?: string;
   profile?: Profile;
   tags?: string[];
   attachment?: string;
   externalURL?: string;
-  encryptedSymmetricKey?: string;
-  unifiedAccessControlConditions?: string;
   commentsCount?: number;
   likesCount?: number;
   comments?: PostComment[];
@@ -247,6 +248,56 @@ export interface PostLike {
   };
   id?: string;
   postID?: string;
+  isDeleted?: boolean;
+  profileID?: string;
+  profile?: Profile
+}
+
+export interface Article {
+  createdAt?: any;
+  id?: string;
+  creator?: {
+    id: string;
+  };
+  abstract?: string;
+  visualAbstract?: string;
+  body?: string;
+  price?: number;
+  unifiedAccessControlConditions?: string;
+  encryptedSymmetricKey?: string;
+  isDeleted?: boolean;
+  isEncrypted?: boolean;
+  profileID?: string;
+  profile?: Profile;
+  tags?: string[];
+  attachment?: string;
+  externalURL?: string;
+  commentsCount?: number;
+  likesCount?: number;
+  comments?: ArticleComment[];
+  likes?: ArticleLike[];
+}
+
+export interface ArticleComment {
+  creator?: {
+    id: string;
+  };
+  id?: string;
+  content?: string;
+  createdAt?: any;
+  articleID?: string;
+  isDeleted?: boolean;
+  replyingToID?: string;
+  profileID?: string;
+  profile?: Profile
+}
+
+export interface ArticleLike {
+  creator?: {
+    id: string;
+  };
+  id?: string;
+  articleID?: string;
   isDeleted?: boolean;
   profileID?: string;
   profile?: Profile

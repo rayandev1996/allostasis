@@ -8,39 +8,7 @@ export declare const definition: {
                 type: string;
             };
         };
-        Chat: {
-            interface: boolean;
-            implements: any[];
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        ChatMessage: {
-            interface: boolean;
-            implements: any[];
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        Education: {
-            interface: boolean;
-            implements: any[];
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        Follow: {
-            interface: boolean;
-            implements: any[];
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        Experience: {
+        Article: {
             interface: boolean;
             implements: any[];
             id: string;
@@ -49,14 +17,6 @@ export declare const definition: {
             };
         };
         Asset: {
-            interface: boolean;
-            implements: any[];
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        Article: {
             interface: boolean;
             implements: any[];
             id: string;
@@ -107,14 +67,14 @@ export declare const definition: {
     };
     objects: {
         Profile: {
-            age: {
+            logo: {
+                type: string;
+                required: boolean;
+            };
+            name: {
                 type: string;
                 required: boolean;
                 indexed: boolean;
-            };
-            bio: {
-                type: string;
-                required: boolean;
             };
             cover: {
                 type: string;
@@ -124,22 +84,9 @@ export declare const definition: {
                 type: string;
                 required: boolean;
             };
-            avatar: {
+            slogan: {
                 type: string;
                 required: boolean;
-            };
-            gender: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            skills: {
-                type: string;
-                required: boolean;
-                item: {
-                    type: string;
-                    required: boolean;
-                };
             };
             address: {
                 type: string;
@@ -149,12 +96,7 @@ export declare const definition: {
                 type: string;
                 required: boolean;
             };
-            accountType: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            displayName: {
+            platformID: {
                 type: string;
                 required: boolean;
                 indexed: boolean;
@@ -171,103 +113,39 @@ export declare const definition: {
                     required: boolean;
                 };
             };
+            projectVision: {
+                type: string;
+                required: boolean;
+            };
+            requestedFund: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            projectHistory: {
+                type: string;
+                required: boolean;
+            };
+            projectMission: {
+                type: string;
+                required: boolean;
+            };
+            fundingStartDate: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
             publicEncryptionDID: {
+                type: string;
+                required: boolean;
+            };
+            projectCompellingVideo: {
                 type: string;
                 required: boolean;
             };
             creator: {
                 type: string;
                 viewType: string;
-            };
-            chats: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            chatsCount: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            receivedChats: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            receivedChatsCount: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            experiences: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            educations: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            followings: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            followingsCount: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            followers: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            followersCount: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
             };
             posts: {
                 type: string;
@@ -279,24 +157,6 @@ export declare const definition: {
                 };
             };
             postsCount: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            assets: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            assetsCount: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -323,42 +183,7 @@ export declare const definition: {
                     property: string;
                 };
             };
-        };
-        Chat: {
-            channelID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            createdAt: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            isDeleted: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            relationID: {
-                type: string;
-                required: boolean;
-            };
-            recipientProfileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
+            assets: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -367,276 +192,7 @@ export declare const definition: {
                     property: string;
                 };
             };
-            recipientProfile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            messages: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            messagesCount: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
-        ChatMessage: {
-            body: {
-                type: string;
-                required: boolean;
-            };
-            chatID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            createdAt: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            messageType: {
-                type: string;
-                required: boolean;
-            };
-            encryptedSymmetricKey: {
-                type: string;
-                required: boolean;
-            };
-            unifiedAccessControlConditions: {
-                type: string;
-                required: boolean;
-            };
-            chat: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
-        Education: {
-            city: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            title: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            school: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            endDate: {
-                type: string;
-                required: boolean;
-            };
-            isDeleted: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            startDate: {
-                type: string;
-                required: boolean;
-            };
-            description: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
-        Follow: {
-            isDeleted: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            targetProfileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            targetProfile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
-        Experience: {
-            city: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            title: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            company: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            endDate: {
-                type: string;
-                required: boolean;
-            };
-            isDeleted: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            startDate: {
-                type: string;
-                required: boolean;
-            };
-            description: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
-        Asset: {
-            tags: {
-                type: string;
-                required: boolean;
-                item: {
-                    type: string;
-                    required: boolean;
-                };
-            };
-            image: {
-                type: string;
-                required: boolean;
-            };
-            title: {
-                type: string;
-                required: boolean;
-            };
-            isDeleted: {
-                type: string;
-                required: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-            };
-            description: {
-                type: string;
-                required: boolean;
-            };
-            externalURL: {
-                type: string;
-                required: boolean;
-            };
-            animationURL: {
-                type: string;
-                required: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
+            assetsCount: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -805,6 +361,89 @@ export declare const definition: {
                 };
             };
         };
+        Asset: {
+            tag1: {
+                type: string;
+                required: boolean;
+            };
+            tag2: {
+                type: string;
+                required: boolean;
+            };
+            tag3: {
+                type: string;
+                required: boolean;
+            };
+            tag4: {
+                type: string;
+                required: boolean;
+            };
+            tag5: {
+                type: string;
+                required: boolean;
+            };
+            tag6: {
+                type: string;
+                required: boolean;
+            };
+            tag7: {
+                type: string;
+                required: boolean;
+            };
+            tag8: {
+                type: string;
+                required: boolean;
+            };
+            tag9: {
+                type: string;
+                required: boolean;
+            };
+            image: {
+                type: string;
+                required: boolean;
+            };
+            tag10: {
+                type: string;
+                required: boolean;
+            };
+            title: {
+                type: string;
+                required: boolean;
+            };
+            createdAt: {
+                type: string;
+                required: boolean;
+            };
+            profileID: {
+                type: string;
+                required: boolean;
+            };
+            description: {
+                type: string;
+                required: boolean;
+            };
+            externalURL: {
+                type: string;
+                required: boolean;
+            };
+            animationURL: {
+                type: string;
+                required: boolean;
+            };
+            creator: {
+                type: string;
+                viewType: string;
+            };
+            profile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+        };
         Post: {
             body: {
                 type: string;
@@ -879,22 +518,7 @@ export declare const definition: {
             attachment: {
                 type: string;
                 required: boolean;
-            };
-            externalURL: {
-                type: string;
-                required: boolean;
-            };
-            isEncrypted: {
-                type: string;
-                required: boolean;
-            };
-            encryptedSymmetricKey: {
-                type: string;
-                required: boolean;
-            };
-            unifiedAccessControlConditions: {
-                type: string;
-                required: boolean;
+                indexed: boolean;
             };
             creator: {
                 type: string;
@@ -1002,6 +626,16 @@ export declare const definition: {
         };
         PostLike: {
             postID: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            status: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            createdAt: {
                 type: string;
                 required: boolean;
                 indexed: boolean;
@@ -1139,31 +773,11 @@ export declare const definition: {
             type: string;
             name: string;
         };
-        chatList: {
-            type: string;
-            name: string;
-        };
-        chatMessageList: {
-            type: string;
-            name: string;
-        };
-        educationList: {
-            type: string;
-            name: string;
-        };
-        followList: {
-            type: string;
-            name: string;
-        };
-        experienceList: {
+        articleList: {
             type: string;
             name: string;
         };
         assetList: {
-            type: string;
-            name: string;
-        };
-        articleList: {
             type: string;
             name: string;
         };
