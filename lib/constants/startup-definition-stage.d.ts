@@ -8,7 +8,7 @@ export declare const definition: {
                 type: string;
             };
         };
-        Article: {
+        Post: {
             interface: boolean;
             implements: any[];
             id: string;
@@ -24,7 +24,7 @@ export declare const definition: {
                 type: string;
             };
         };
-        Post: {
+        Article: {
             interface: boolean;
             implements: any[];
             id: string;
@@ -202,7 +202,7 @@ export declare const definition: {
                 };
             };
         };
-        Article: {
+        Post: {
             body: {
                 type: string;
                 required: boolean;
@@ -253,17 +253,7 @@ export declare const definition: {
                 required: boolean;
                 indexed: boolean;
             };
-            price: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
             tag10: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            abstract: {
                 type: string;
                 required: boolean;
                 indexed: boolean;
@@ -287,29 +277,6 @@ export declare const definition: {
                 type: string;
                 required: boolean;
                 indexed: boolean;
-            };
-            externalURL: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            isEncrypted: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            visualAbstract: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            encryptedSymmetricKey: {
-                type: string;
-                required: boolean;
-            };
-            unifiedAccessControlConditions: {
-                type: string;
-                required: boolean;
             };
             creator: {
                 type: string;
@@ -444,7 +411,7 @@ export declare const definition: {
                 };
             };
         };
-        Post: {
+        Article: {
             body: {
                 type: string;
                 required: boolean;
@@ -495,7 +462,17 @@ export declare const definition: {
                 required: boolean;
                 indexed: boolean;
             };
+            price: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
             tag10: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            abstract: {
                 type: string;
                 required: boolean;
                 indexed: boolean;
@@ -519,6 +496,29 @@ export declare const definition: {
                 type: string;
                 required: boolean;
                 indexed: boolean;
+            };
+            externalURL: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            isEncrypted: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            visualAbstract: {
+                type: string;
+                required: boolean;
+                indexed: boolean;
+            };
+            encryptedSymmetricKey: {
+                type: string;
+                required: boolean;
+            };
+            unifiedAccessControlConditions: {
+                type: string;
+                required: boolean;
             };
             creator: {
                 type: string;
@@ -773,7 +773,7 @@ export declare const definition: {
             type: string;
             name: string;
         };
-        articleList: {
+        postList: {
             type: string;
             name: string;
         };
@@ -781,7 +781,7 @@ export declare const definition: {
             type: string;
             name: string;
         };
-        postList: {
+        articleList: {
             type: string;
             name: string;
         };

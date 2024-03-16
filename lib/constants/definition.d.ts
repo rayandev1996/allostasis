@@ -32,14 +32,6 @@ export declare const definition: {
                 type: string;
             };
         };
-        Follow: {
-            interface: boolean;
-            implements: any[];
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
         Experience: {
             interface: boolean;
             implements: any[];
@@ -48,7 +40,7 @@ export declare const definition: {
                 type: string;
             };
         };
-        Asset: {
+        Follow: {
             interface: boolean;
             implements: any[];
             id: string;
@@ -65,6 +57,14 @@ export declare const definition: {
             };
         };
         Post: {
+            interface: boolean;
+            implements: any[];
+            id: string;
+            accountRelation: {
+                type: string;
+            };
+        };
+        Asset: {
             interface: boolean;
             implements: any[];
             id: string;
@@ -503,45 +503,6 @@ export declare const definition: {
                 };
             };
         };
-        Follow: {
-            isDeleted: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            targetProfileID: {
-                type: string;
-                required: boolean;
-                indexed: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-            targetProfile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
         Experience: {
             city: {
                 type: string;
@@ -595,48 +556,36 @@ export declare const definition: {
                 };
             };
         };
-        Asset: {
-            tags: {
-                type: string;
-                required: boolean;
-                item: {
-                    type: string;
-                    required: boolean;
-                };
-            };
-            image: {
-                type: string;
-                required: boolean;
-            };
-            title: {
-                type: string;
-                required: boolean;
-            };
+        Follow: {
             isDeleted: {
                 type: string;
                 required: boolean;
+                indexed: boolean;
             };
             profileID: {
                 type: string;
                 required: boolean;
+                indexed: boolean;
             };
-            description: {
+            targetProfileID: {
                 type: string;
                 required: boolean;
-            };
-            externalURL: {
-                type: string;
-                required: boolean;
-            };
-            animationURL: {
-                type: string;
-                required: boolean;
+                indexed: boolean;
             };
             creator: {
                 type: string;
                 viewType: string;
             };
             profile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+            targetProfile: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -946,6 +895,57 @@ export declare const definition: {
                 };
             };
         };
+        Asset: {
+            tags: {
+                type: string;
+                required: boolean;
+                item: {
+                    type: string;
+                    required: boolean;
+                };
+            };
+            image: {
+                type: string;
+                required: boolean;
+            };
+            title: {
+                type: string;
+                required: boolean;
+            };
+            isDeleted: {
+                type: string;
+                required: boolean;
+            };
+            profileID: {
+                type: string;
+                required: boolean;
+            };
+            description: {
+                type: string;
+                required: boolean;
+            };
+            externalURL: {
+                type: string;
+                required: boolean;
+            };
+            animationURL: {
+                type: string;
+                required: boolean;
+            };
+            creator: {
+                type: string;
+                viewType: string;
+            };
+            profile: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+        };
         PostComment: {
             postID: {
                 type: string;
@@ -1151,15 +1151,11 @@ export declare const definition: {
             type: string;
             name: string;
         };
-        followList: {
-            type: string;
-            name: string;
-        };
         experienceList: {
             type: string;
             name: string;
         };
-        assetList: {
+        followList: {
             type: string;
             name: string;
         };
@@ -1168,6 +1164,10 @@ export declare const definition: {
             name: string;
         };
         postList: {
+            type: string;
+            name: string;
+        };
+        assetList: {
             type: string;
             name: string;
         };

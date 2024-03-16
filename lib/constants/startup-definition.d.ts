@@ -8,6 +8,14 @@ export declare const definition: {
                 type: string;
             };
         };
+        Asset: {
+            interface: boolean;
+            implements: any[];
+            id: string;
+            accountRelation: {
+                type: string;
+            };
+        };
         Article: {
             interface: boolean;
             implements: any[];
@@ -17,14 +25,6 @@ export declare const definition: {
             };
         };
         Post: {
-            interface: boolean;
-            implements: any[];
-            id: string;
-            accountRelation: {
-                type: string;
-            };
-        };
-        Asset: {
             interface: boolean;
             implements: any[];
             id: string;
@@ -193,6 +193,89 @@ export declare const definition: {
                 };
             };
             assetsCount: {
+                type: string;
+                viewType: string;
+                relation: {
+                    source: string;
+                    model: string;
+                    property: string;
+                };
+            };
+        };
+        Asset: {
+            tag1: {
+                type: string;
+                required: boolean;
+            };
+            tag2: {
+                type: string;
+                required: boolean;
+            };
+            tag3: {
+                type: string;
+                required: boolean;
+            };
+            tag4: {
+                type: string;
+                required: boolean;
+            };
+            tag5: {
+                type: string;
+                required: boolean;
+            };
+            tag6: {
+                type: string;
+                required: boolean;
+            };
+            tag7: {
+                type: string;
+                required: boolean;
+            };
+            tag8: {
+                type: string;
+                required: boolean;
+            };
+            tag9: {
+                type: string;
+                required: boolean;
+            };
+            image: {
+                type: string;
+                required: boolean;
+            };
+            tag10: {
+                type: string;
+                required: boolean;
+            };
+            title: {
+                type: string;
+                required: boolean;
+            };
+            createdAt: {
+                type: string;
+                required: boolean;
+            };
+            profileID: {
+                type: string;
+                required: boolean;
+            };
+            description: {
+                type: string;
+                required: boolean;
+            };
+            externalURL: {
+                type: string;
+                required: boolean;
+            };
+            animationURL: {
+                type: string;
+                required: boolean;
+            };
+            creator: {
+                type: string;
+                viewType: string;
+            };
+            profile: {
                 type: string;
                 viewType: string;
                 relation: {
@@ -487,89 +570,6 @@ export declare const definition: {
                 };
             };
         };
-        Asset: {
-            tag1: {
-                type: string;
-                required: boolean;
-            };
-            tag2: {
-                type: string;
-                required: boolean;
-            };
-            tag3: {
-                type: string;
-                required: boolean;
-            };
-            tag4: {
-                type: string;
-                required: boolean;
-            };
-            tag5: {
-                type: string;
-                required: boolean;
-            };
-            tag6: {
-                type: string;
-                required: boolean;
-            };
-            tag7: {
-                type: string;
-                required: boolean;
-            };
-            tag8: {
-                type: string;
-                required: boolean;
-            };
-            tag9: {
-                type: string;
-                required: boolean;
-            };
-            image: {
-                type: string;
-                required: boolean;
-            };
-            tag10: {
-                type: string;
-                required: boolean;
-            };
-            title: {
-                type: string;
-                required: boolean;
-            };
-            createdAt: {
-                type: string;
-                required: boolean;
-            };
-            profileID: {
-                type: string;
-                required: boolean;
-            };
-            description: {
-                type: string;
-                required: boolean;
-            };
-            externalURL: {
-                type: string;
-                required: boolean;
-            };
-            animationURL: {
-                type: string;
-                required: boolean;
-            };
-            creator: {
-                type: string;
-                viewType: string;
-            };
-            profile: {
-                type: string;
-                viewType: string;
-                relation: {
-                    source: string;
-                    model: string;
-                    property: string;
-                };
-            };
-        };
         PostComment: {
             postID: {
                 type: string;
@@ -773,15 +773,15 @@ export declare const definition: {
             type: string;
             name: string;
         };
+        assetList: {
+            type: string;
+            name: string;
+        };
         articleList: {
             type: string;
             name: string;
         };
         postList: {
-            type: string;
-            name: string;
-        };
-        assetList: {
             type: string;
             name: string;
         };
